@@ -1,15 +1,15 @@
 import React from 'react'
 import InputField from '../../components/InputField'
 
-const Login = ({ formState, setFormState, setIsSignup, handleSubmit, pending,setErrors,errors,handleGoogleSignIn }) => {
+const Login = ({ loading,formState, setFormState, setIsSignup, handleSubmit, pending, setErrors, errors, handleGoogleSignIn }) => {
     const handleChange = (e) => {
         const { name, value } = e.target;
 
         // no any feilds should be more that 8 letters except email
-        if(name !== 'email' && value.length > 8){
+        if (name !== 'email' && value.length > 8) {
             return;
         }
-        
+
         setFormState((prev) => ({ ...prev, [name]: value }));
         setErrors('')
     };
@@ -76,10 +76,10 @@ const Login = ({ formState, setFormState, setIsSignup, handleSubmit, pending,set
 
                 <button
                     type="submit"
-                    className="w-full bg-blue-500 disabled:bg-gray-400 disabled:cursor-wait text-white py-3 rounded-md mt-6 shadow-md hover:bg-blue-600"
+                    className="w-full flex justify-center items-center bg-blue-500 disabled:bg-gray-400 disabled:cursor-wait text-white py-3 rounded-md mt-6 shadow-md hover:bg-blue-600"
                     disabled={pending}
                 >
-                    Login
+                    {loading ? <div className='animate-spin rounded-full border-4 border-t-blue-600 w-5 h-5'></div> : "Login"}
                 </button>
             </form>
         </div>

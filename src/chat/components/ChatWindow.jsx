@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ChatList from './ChatList';
 import { BsSend, BsThreeDotsVertical } from 'react-icons/bs';
 import { FaMicrophone, FaPaperclip } from 'react-icons/fa';
@@ -15,9 +15,8 @@ import GroupsList from './GroupsList';
 import { AiOutlineClose } from 'react-icons/ai';
 import { displayName } from '../../utils/utilityFunction';
 import toast from 'react-hot-toast';
-import { LocalUser, RemoteUser, useIsConnected, useJoin, useLocalMicrophoneTrack, usePublish, useRemoteUsers } from 'agora-rtc-react';
-// import { CallDialog, CallingDialogBox, IncomingCallDialog } from './CallDialogue';
-// import { useJoin, useLocalMicrophoneTrack } from 'agora-rtc-react';
+import { ZegoUIKitPrebuilt } from '@zegocloud/zego-uikit-prebuilt';
+import { ZIM } from "zego-zim-web";
 
 const SenderName = ({ senderId }) => {
     const [name, setName] = useState(null)
@@ -36,44 +35,6 @@ const SenderName = ({ senderId }) => {
     return <p className="font-semibold text-[12px]">{name}</p>
 }
 
-const CallingComponent = ({callAccepted}) => {
-
-    useEffect(() => {
-      console.log(callAccepted,"callAccepted")
-    }, [callAccepted])
-    
-
-    useJoin({ appid: import.meta.env.VITE_APP_AGORA_APP_ID, channel: 'infinity-chat', token: import.meta.env.VITE_APP_AGORA_TOKEN }, callAccepted);
-
-    const { localMicrophoneTrack } = useLocalMicrophoneTrack(callAccepted);
-    usePublish([localMicrophoneTrack]);
-
-    const remoteUsers = useRemoteUsers();
-    // console.log("remote users:", remoteUsers)
-
-    const isConnected = useIsConnected();
-    console.log(isConnected, "isConnecteddd");
-    return (
-        <div className="user">
-            {console.log(remoteUsers,"remoteUsers")}
-            <LocalUser
-                audioTrack={localMicrophoneTrack}
-                micOn={callAccepted}
-                cover="https://www.agora.io/en/wp-content/uploads/2022/10/3d-spatial-audio-icon.svg"
-            >
-                <samp className="user-name">You</samp>
-            </LocalUser>
-            {remoteUsers.map((user) => (
-                <div className="user" key={user.uid}>
-                    <RemoteUser cover="https://www.agora.io/en/wp-content/uploads/2022/10/3d-spatial-audio-icon.svg" user={user}>
-                        <samp className="user-name">{user.uid}</samp>
-                    </RemoteUser>
-                </div>
-            ))}
-        </div>
-    )
-}
-
 const ChatWindow = () => {
     const dispatch = useDispatch()
 
@@ -84,11 +45,79 @@ const ChatWindow = () => {
     const [currentMessage, setCurrentMesage] = useState("");
     const [userName, setUserName] = useState('');
     const [uploadedFiles, setUploadedFiles] = useState([]);
-    // const [callDetails, setCallDetails] = useState()
-    // const [isIncomingCall, setIsIncomingCall] = useState(false)
-    // const [callingDialog, setCallingDialog] = useState(false)
-    // const [calling, setCalling] = useState(false)
-    const [isCallAccepted,setIsCallAccepted] = useState(false)
+
+    const zpRef = useRef(null);
+    const useZegoInstance = (currentUser, roomId) => {
+
+        if (!zpRef.current) {
+            const appId = parseInt(import.meta.env.VITE_APP_ZEGO_APP_ID);
+            const serverSecret = import.meta.env.VITE_APP_ZEGO_SERVER_SECRET;
+            const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(
+                appId,
+                serverSecret,
+                roomId,
+                currentUser.uid,
+                `user_${currentUser.uid}`
+            );
+
+            const zp = ZegoUIKitPrebuilt.create(kitToken);
+
+            //to solve - {"code":6000121,"message":"API.callInvite: User is not logged in."}
+            // var zim = ZIM.getInstance();
+            // var userInfo = { userID: currentUser.uid, userName: `user_${currentUser.uid}` };
+            // var token = kitToken;
+
+            //to get the token https://github.com/ZEGOCLOUD/zego_server_assistant/blob/master/token/nodejs/sample/sample-base.js
+            //https://www.zegocloud.com/docs/zim-web/guides/users/authentication
+
+            // zim.login(userInfo, token)
+            //     .then(function () {
+            //         // Login successful.
+            //         console.log("login in successflly")
+            //     })
+            //     .catch(function (err) {
+            //         // Login failed.
+            //         console.log(err, "login failed")
+            //     });
+
+            zp.addPlugins({ ZIM });
+
+
+            zp.setCallInvitationConfig({
+                // enableCustomCallInvitationDialog: true,
+                onIncomingCallReceived: (callID, caller, callType, callees) => {
+                    console.log('Incoming call received:', callID, caller, callType, callees);
+                },
+                onIncomingCallCanceled: (callID, caller) => {
+                    console.log('Incoming call canceled:', callID, caller);
+                },
+                onIncomingCallTimeout: (callID, caller) => {
+                    console.log('Incoming call timed out:', callID, caller);
+                },
+            });
+
+            zpRef.current = zp;
+        }
+
+        return zpRef.current;
+    };
+
+    // useEffect(() => {
+    //     const appId = parseInt(import.meta.env.VITE_APP_ZEGO_APP_ID)
+    //     const serverSecret = import.meta.env.VITE_APP_ZEGO_SERVER_SECRET
+    //     const appSign = import.meta.env.VITE_APP_ZEGO_APP_SIGN
+
+    //     let isGroupCall = true;
+
+    //     const TOKEN = ZegoUIKitPrebuilt.generateKitTokenForTest(appId, serverSecret, null, currentUser?.uid, "usr-name");
+
+    //     const zp = ZegoUIKitPrebuilt.create(TOKEN);
+
+    //     console.log(zp, "kitt")
+
+    //     zp.addPlugins({ ZIM });
+    //     setZegoKit(zp)
+    // }, [])
 
     const getDisplayName = async () => {
         setUserName('')
@@ -106,77 +135,16 @@ const ChatWindow = () => {
         getDisplayName();
     }, [activeChat])
 
-    const initiateCall = async () => {
-        const activeChatData = chats.find((chat) => chat.chatId === activeChat);
+    const sendInvitation = (callees, roomId, currentUser, callType) => {
+        const zp = useZegoInstance(currentUser, roomId);
 
-        // const channelName = `${activeChatData.chatId}-${Date.now()}`; // Unique channel name
-        // const token = import.meta.env.VITE_APP_AGORA_TOKEN; // Replace with your token generation logic
-
-        try {
-            // Update Firestore with call details
-            const chatRef = doc(db, "chats", activeChatData?.chatId);
-
-            await updateDoc(chatRef, {
-                callDetails: {
-                    isCalling: true,
-                    callType: activeChatData?.isGroup ? "groupVoice" : "oneToOneVoice",
-                    channelName: "infinity-chat",
-                    callerId: currentUser?.uid,
-                    timestamp: Date.now(),
-                },
-            });
-
-            toast((t) => (
-                <div className='flex flex-col space-y-3 w-52 justify-center items-center'>
-                    <h1 className='font-semibold text-[20px]'>Calling...</h1>
-
-                    <button className='p-3 w-28 bg-red-500 text-white font-bold rounded-md' onClick={() => endCall(t.id)}>
-                        End Call
-                    </button>
-                </div>
-            ), {
-                duration: 10000
-            });
-
-            // setCallingDialog(true)
-            // Notify success
-            // toast.success("Call initiated!");
-
-            // return { channelName, token };
-        } catch (error) {
-            console.error("Error initiating call:", error);
-            toast.error("Failed to initiate call.");
-            throw error;
-        }
+        zp.sendCallInvitation({
+            callees: callees.map((id) => ({ userID: id, userName: `user_${id}` })),
+            callType: callType === "voice" ? ZegoUIKitPrebuilt.InvitationTypeVoiceCall : ZegoUIKitPrebuilt.InvitationTypeVideoCall,
+            timeout: 60,
+            customData: JSON.stringify({ roomId }),
+        });
     };
-
-    const acceptCall = async(toastId) => {
-        toast.dismiss(toastId);
-        try {
-            console.log(activeChat, "activechatt")
-            const chatRef = doc(db, "chats", activeChat);
-
-            await updateDoc(chatRef, {
-                "callDetails.isAccepted": true,
-            });
-
-            setIsCallAccepted(true)
-            // toast.success("Call accepted!");
-            // setIsModalOpen(false);
-        } catch (error) {
-            console.error("Error accepting call:", error);
-            toast.error("Failed to accept call.");
-        }
-    }
-
-    const endCall = (toastId) => {
-        toast.dismiss(toastId);
-    }
-
-    const declineCall = (toastId) => {
-        toast.dismiss(toastId);
-    }
-
 
     useEffect(() => {
         // Setup a real-time listener for the entire 'chats' collection
@@ -192,42 +160,14 @@ const ChatWindow = () => {
                     filteredChats.push({ chatId: doc.id, ...chatData });
                 }
 
-                // console.log("chatData",chatData);
-
-                if (chatData?.participants?.includes(currentUser?.uid) &&
-                    chatData?.callDetails?.isCalling &&
-                    chatData?.callDetails?.callerId !== currentUser?.uid
+                if (
+                    chatData?.callDetails?.status === "ringing" &&
+                    chatData?.callDetails?.caller !== currentUser.uid
                 ) {
-                    console.log(chatData?.callDetails, "call details");
-                    toast((t) => (
-                        <div className='flex flex-col space-y-3 w-56 justify-center items-center'>
-                            <h1 className='font-semibold text-[20px]'>Incoming Call...</h1>
-                            <div className='flex space-x-2'>
-                                <button className='p-3 w-24 bg-blue-500 text-white font-bold rounded-md' onClick={() => acceptCall(t.id)}>
-                                    Accept
-                                </button>
-                                <button className='p-3 w-24 bg-red-500 text-white font-bold rounded-md' onClick={() => declineCall(t.id)}>
-                                    Decline
-                                </button>
-                            </div>
-                        </div>
-                    ), {
-                        duration: 10000
-                    });
-                    // setIsIncomingCall(true)
-                    // setCallDetails(chatData?.callDetails);
+                    useZegoInstance(currentUser);
+                    // zp.onIncomingCallReceived(chatData.callDetails);
                 }
 
-                if (chatData?.participants?.includes(currentUser?.uid) &&
-                    chatData?.callDetails?.isAccepted
-                ) {
-                    console.log("call accepted event")
-                    toast((t) => (
-                       <CallingComponent callAccepted={isCallAccepted}/>
-                    ), {
-                        duration: 10000
-                    });
-                }
             });
 
             // Process the updated chats data
@@ -342,6 +282,34 @@ const ChatWindow = () => {
         setUploadedFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
     };
 
+    const initiateCall = async (callType = "voice") => {
+        const chatRef = doc(db, "chats", activeChat);
+        const roomId = `room-${Math.random().toString(36).substr(2, 9)}`; // Generate unique room ID
+
+        // Update Firestore with call details
+        await updateDoc(chatRef, {
+            callDetails: {
+                caller: currentUser.uid,
+                status: "ringing",
+                chatId: activeChat,
+                roomId: roomId,
+            },
+        });
+
+        // Fetch the chat document
+        const chatSnapshot = await getDoc(chatRef);  // Use getDoc from Firestore 9+
+        if (chatSnapshot.exists()) {
+            const chatData = chatSnapshot.data();
+            const callees = chatData?.participants?.filter(
+                (participant) => participant !== currentUser.uid
+            );
+
+            // Send invitations via ZegoCloud
+            sendInvitation(callees, roomId, currentUser, callType);
+        } else {
+            console.log("Chat not found");
+        }
+    };
 
     return (
         <div className='flex w-[80%] h-[97%] bg-gray-100 rounded-3xl'>
@@ -359,8 +327,8 @@ const ChatWindow = () => {
                             </div>
                             <div className='flex space-x-4'>
                                 {/* <MdSearch size={20} className='text-gray-600  cursor-pointer' /> */}
-                                <MdCall size={20} className=' text-gray-600 cursor-pointer' onClick={initiateCall} />
-                                <MdVideoCall size={20} className=' text-gray-600 cursor-pointer' />
+                                <MdCall size={20} className=' text-gray-600 cursor-pointer' onClick={() => initiateCall("voice")} />
+                                <MdVideoCall size={20} className=' text-gray-600 cursor-pointer' onClick={() => initiateCall("video")} />
 
                                 {/* <BsThreeDotsVertical size={20} className='mr-12 text-gray-600 cursor-pointer' /> */}
                             </div>
@@ -373,6 +341,8 @@ const ChatWindow = () => {
                 </div>
 
                 <div className="flex-1 p-4 overflow-y-scroll">
+                    <div id='callContainer'></div>
+
                     {activeChat ? (
                         chats ? (
                             (() => {

@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import LoginSignup from './auth/Auth';
 import ProtectedRoute from './ProtectedRoute';
 import Chat from './chat/Chat';
+import Call from './call/Call';
 
 function App() {
   return (
@@ -9,6 +10,8 @@ function App() {
       <Routes>
         {/* Public Route */}
         <Route path="/auth" element={<LoginSignup />} />
+        <Route path="/call" element={<Call/>} />
+
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>

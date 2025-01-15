@@ -23,3 +23,13 @@ export const displayName = async (chatData, currentUser) => {
         return await getOtherUserInfo(currentUser?.uid);
     }
 };
+
+export const currentUserName = async(currentUser)=>{
+    const userRef = doc(db, 'users', currentUser.uid);
+    const userDoc = await getDoc(userRef);
+    const currentUserInfo = userDoc.data();
+
+    return currentUserInfo?.lastName
+        ? `${currentUserInfo?.firstName} ${currentUserInfo?.lastName}`
+        : currentUserInfo?.firstName;
+}

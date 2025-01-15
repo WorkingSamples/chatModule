@@ -1,7 +1,7 @@
 import React from 'react'
 import InputField from '../../components/InputField'
 
-const Signup = ({ setIsSignup, formState, setFormState, handleSubmit, pending, errors, setErrors,handleGoogleSignIn }) => {
+const Signup = ({ setIsSignup, formState,loading, setFormState, handleSubmit, pending, errors, setErrors,handleGoogleSignIn }) => {
     const handleChange = (e) => {
         const { name, value } = e.target;
 
@@ -91,10 +91,10 @@ const Signup = ({ setIsSignup, formState, setFormState, handleSubmit, pending, e
                 </div> */}
                 <button
                     type="submit"
-                    className="w-full bg-blue-500 disabled:bg-gray-400 disabled:cursor-wait text-white py-3 rounded-md mt-6 shadow-md hover:bg-blue-600"
-                    disabled={pending}
+                    className="w-full flex justify-center items-center bg-blue-500 disabled:bg-gray-400 disabled:cursor-wait text-white py-3 rounded-md mt-6 shadow-md hover:bg-blue-600"
+                    disabled={loading}
                 >
-                    Sign Up
+                   {loading ? <div className='animate-spin rounded-full border-t-blue-600'></div>:"Sign Up"} 
                 </button>
             </form>
         </div>

@@ -16,6 +16,7 @@ const LoginSignup = () => {
   const [formState, setFormState] = useState({ email: '', password: '', firstName: '', lastName: '' });
   const [pending, startTransition] = useTransition();
   const [errors, setErrors] = useState('')
+  const [loading, setLoading] = useState(false)
   const dispatch = useDispatch();
 
   const validateForm = () => {
@@ -50,16 +51,16 @@ const LoginSignup = () => {
     return true;
   };
 
-  const getUserInfo = async (uid,email,message) => {
+  const getUserInfo = async (uid, email, message) => {
     const userDocRef = doc(db, "users", uid);
     const userDoc = await getDoc(userDocRef);
 
     if (userDoc.exists()) {
       console.log("userdoc exist");
-      
+
       const userInfo = userDoc.data();
-      console.log(userInfo,"userinfoo");
-      
+      console.log(userInfo, "userinfoo");
+
 
       // Dispatch user data to Redux or any state manager
       dispatch(setUser({ uid, email, ...userInfo }));
@@ -78,44 +79,43 @@ const LoginSignup = () => {
     if (validateForm()) {
       dispatch(setStatus('loading'));
       try {
+        setLoading(true); // Start loading
         if (isSignup) {
-          startTransition(async () => {
-            signup(formState.email, formState.password, formState.firstName, formState.lastName)
-              .then((userCredential) => {
-                console.log(userCredential, "userr");
-                const { uid,email } = userCredential; // Extract serializable fields
-                getUserInfo(uid,email,"Singup successfull !")
-              })
-              .catch((error) => {
-                dispatch(setStatus('error'));
-                toast.error(error?.message)
-                console.log('Signup Error:', error?.message);
-              });
-          });
+          await signup(formState.email, formState.password, formState.firstName, formState.lastName)
+            .then((userCredential) => {
+              console.log(userCredential, "userr");
+              const { uid, email } = userCredential; // Extract serializable fields
+              getUserInfo(uid, email, "Signup successful!");
+            })
+            .catch((error) => {
+              dispatch(setStatus('error'));
+              toast.error(error?.message);
+              console.log('Signup Error:', error?.message);
+            });
         } else {
-          startTransition(() => {
-            login(formState.email, formState.password)
-              .then((userCredential) => {
-                const user = userCredential.user;
-                console.log(userCredential,"user cred after login");
-                
-                const { uid, email } = user; // Extract serializable fields
-                getUserInfo(uid,email,"Login successfull !")
-             
-              })
-              .catch((error) => {
-                dispatch(setStatus('error'));
-                toast.error(error?.message)
-                console.error('Login Error:', error);
-              });
-          });
+          await login(formState.email, formState.password)
+            .then((userCredential) => {
+              const user = userCredential.user;
+              console.log(userCredential, "user cred after login");
+  
+              const { uid, email } = user; // Extract serializable fields
+              getUserInfo(uid, email, "Login successful!");
+            })
+            .catch((error) => {
+              dispatch(setStatus('error'));
+              toast.error(error?.message);
+              console.error('Login Error:', error);
+            });
         }
       } catch (err) {
         dispatch(setStatus('error'));
         console.error('Auth Error:', err);
+      } finally {
+        setLoading(false); // Stop loading after everything is done
       }
     }
   };
+  
 
   const handleGoogleSignIn = async () => {
     try {
@@ -130,7 +130,6 @@ const LoginSignup = () => {
     }
   };
 
-
   return (
     <>
       <AuthLayout>
@@ -141,6 +140,7 @@ const LoginSignup = () => {
             setFormState={setFormState}
             handleSubmit={handleSubmit}
             pending={pending}
+            loading={loading}
             errors={errors}
             setErrors={setErrors}
             handleGoogleSignIn={handleGoogleSignIn}
@@ -152,6 +152,7 @@ const LoginSignup = () => {
             setFormState={setFormState}
             handleSubmit={handleSubmit}
             pending={pending}
+            loading={loading}
             errors={errors}
             setErrors={setErrors}
             handleGoogleSignIn={handleGoogleSignIn}
