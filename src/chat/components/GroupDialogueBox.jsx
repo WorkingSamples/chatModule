@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { Dialog } from "@headlessui/react";
 import { useDispatch, useSelector } from "react-redux";
-import { collection, doc, getDocs, query, setDoc, where } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, query, setDoc, where } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import toast from "react-hot-toast";
 import { v4 as uuidv4 } from 'uuid'
 import { setGroups } from "../../store/chatSlice";
 import { setLoading } from "../../store/loadingSlice";
+import CryptoJS from "crypto-js";
+import forge from "node-forge";
+import { encryptSymmetricKey, generateSymmetricKey } from "../../utils/utilityFunction";
 
 export default function GroupDialogBox({
   isModalOpen,
@@ -39,6 +42,21 @@ export default function GroupDialogBox({
 
     //add current user id too
     selectedUsers.push(currentUser?.uid)
+
+    const symmetricKey = generateSymmetricKey();
+    const encryptedKeys = {};
+
+    // Fetch each participant's public key
+    for (const participant of selectedUsers) {
+      const userDoc = doc(db, "users", participant);
+      const userSnapshot = await getDoc(userDoc);
+
+      if (userSnapshot.exists()) {
+        const publicKey = userSnapshot.data().publicKey;
+        encryptedKeys[participant] = encryptSymmetricKey(symmetricKey, publicKey);
+      }
+    }
+
     const chatId = uuidv4(); // Function to generate a unique ID
     const chatRef = doc(db, "chats", chatId);
 
@@ -53,7 +71,8 @@ export default function GroupDialogBox({
         createdBy: currentUser.uid,
         createdAt: Date.now(),
       },
-      callDetails:null
+      encryptedKeys,
+      callDetails: null
     };
 
     await setDoc(chatRef, newGroupChat);

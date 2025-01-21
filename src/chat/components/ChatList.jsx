@@ -4,8 +4,8 @@ import { FaSearch } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 import Loader from '../../utils/Loader';
 import moment from 'moment';
-import { setActiveChat, setMessages, setOtherUser } from '../../store/chatSlice';
-import { displayName } from '../../utils/utilityFunction';
+import { setActiveChat, setMessages, setOtherUser, setSymmetricDecryptedKey } from '../../store/chatSlice';
+import { decryptMessage, displayName, fetchSymmetricDecryptedKey, getUserPvtKey } from '../../utils/utilityFunction';
 
 const DisplayNameComponent = ({ chatData, currentUser }) => {
     const [name, setName] = useState("");
@@ -26,50 +26,66 @@ const ChatList = () => {
     const loading = useSelector((state) => state.loading.chats);
     const currentUser = useSelector((state) => state.user.currentUser)
 
-    // const chats = useSelector((state) => state.chat.);
-    const { messages, otherUser, activeChat, chats } = useSelector((state) => state.chat);
+    const { activeChat, chats,symmetricDecyptedKey } = useSelector((state) => state.chat);
 
-    useEffect(() => {
-        console.log("chats:", chats)
-    }, [chats])
+    const [userPrivateKey,setUserPrivateKey] = useState(null)
+    const [allChats,setAllChats] = useState([])
+
+    const getAllChats = async () => {
+        if (!chats) return [];
+
+        const chatsList = await Promise.all(
+            chats
+                .map(async (chat) => {
+                    try {
+                        const decryptedKey = await fetchSymmetricDecryptedKey(
+                            chat.chatId,
+                            currentUser.uid,
+                            userPrivateKey
+                        );
+
+                        // Return a new object with the decrypted key
+                        return {
+                            ...chat,
+                            decryptedKey, // Add the decrypted key
+                        };
+                    } catch (error) {
+                        console.error(
+                            `Error decrypting key for group ${group.chatId}:`,
+                            error
+                        );
+                        return null; // Return null if there's an error
+                    }
+                })
+        );
+
+        // Filter out any null values in case of errors
+        setAllChats(chatsList.filter(Boolean))
+    };
+
+     useEffect(() => {
+            if (userPrivateKey) {
+                getAllChats()
+            } else {
+                getUserPvtKey(currentUser, setUserPrivateKey)
+            }
+        }, [userPrivateKey, chats])
+
 
     const handleChatClick = async (otherUser, chat) => {
         const chatRoomId = chat.chatId // Unique chatroom ID based on user IDs
+        const decryptedKey = await fetchSymmetricDecryptedKey(chatRoomId, currentUser.uid, userPrivateKey);
+        
+        dispatch(setSymmetricDecryptedKey(decryptedKey));
+
         dispatch(setActiveChat(chatRoomId));
         dispatch(setOtherUser(otherUser));
-
-        //dispatch messages got from handleChats function of sidebar
-        // dispatch(setMessages(chat.messages))
-
-        // Check if the chatroom exists
-        // const chatRef = doc(db, "chats", chatRoomId);
-        // const chatDoc = await getDoc(chatRef);
-        // if (chatDoc.exists()) {
-        //     dispatch(setMessages(chatDoc.data().messages || [])); // Load existing messages
-        // } else {
-        //     dispatch(setMessages([])); // No chatroom exists yet
-        // }
     };
-    // const chats = [
-    //     { name: 'Design chat', lastMessage: 'Hey!', unread: 1, time: '4m' },
-    //     { name: 'Osman Campos', lastMessage: 'You: Hey! We are ready...', unread: 0, time: '20m' },
-    //     // Add more chats
-    // ];
+
 
     return (
-        <div className="w-72 overflow-y-scroll">
-            <div className='relative p-2 mt-2'>
-                <input
-                    className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    type='text'
-                    name='searchUser'
-                    value='james'
-                    placeholder='Search User'
-                />
-                <FaSearch className='absolute right-4 top-5 h-4 w-4 cursor-pointer' />
-            </div>
-
-            {loading ? <Loader /> : (chats && chats.length > 0 ? chats.map((chat, index) => (
+        <div className="w-72 overflow-y-scroll mt-4">
+            {loading ? <Loader /> : (allChats && allChats.length > 0 ? allChats.map((chat, index) => (
                 <div key={index}
                     className={`p-4 border-b flex items-center cursor-pointer ${chat.chatId === activeChat && "bg-gray-200"}`}
                     onClick={() => handleChatClick(chat.user, chat)}>
@@ -79,11 +95,11 @@ const ChatList = () => {
                         {/* <p className="font-bold">{displayName(chat,currentUser)}</p> */}
                         <p className="text-sm text-gray-600">
                             {
-                                chat?.messages[chat?.messages?.length - 1]?.text ? chat?.messages[chat?.messages?.length - 1]?.text : (chat?.messages[chat?.messages?.length - 1]?.file && "file")
+                                chat?.messages[chat?.messages?.length - 1]?.text ? decryptMessage(chat?.messages[chat?.messages?.length - 1]?.text,chat.decryptedKey) : (chat?.messages[chat?.messages?.length - 1]?.file && "file")
                             }
                         </p>
                     </div>
-                    <span className="ml-auto text-xs">{ chat?.messages[chat?.messages.length - 1]?.timestamp && moment(chat?.messages[chat?.messages.length - 1]?.timestamp).format('h:mm A')}</span>
+                    <span className="ml-auto text-xs">{chat?.messages[chat?.messages.length - 1]?.timestamp && moment(chat?.messages[chat?.messages.length - 1]?.timestamp).format('h:mm A')}</span>
                 </div>
             ))
                 :

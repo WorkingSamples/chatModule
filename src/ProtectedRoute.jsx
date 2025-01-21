@@ -14,7 +14,6 @@ const ProtectedRoute = () => {
         //refresh the user from firebase on every render
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
-                console.log(user, "user on refresh");
                 const { uid, email, displayName } = user;
                 setCurrentUser({ uid, email, displayName });
                 dispatch(setUser({ uid, email, displayName }));

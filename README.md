@@ -24,7 +24,7 @@ This web application is a full-featured chat platform that includes real-time me
 - Implemented using **Redux Toolkit** for managing global states like user information, chat state, active chat details, and more.
 
 ### **Dynamic List Rendering**
-- The displayed list dynamically updates based on the sidebar option:
+- The displayed list dynamically  updates based on the sidebar option:
   - **Chats**: Displays all active chats.
   - **Groups**: Lists all available groups.
   - **Users**: Shows all platform users.

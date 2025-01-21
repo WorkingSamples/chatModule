@@ -7,7 +7,8 @@ const initialState = {
   groups: [], // Array of groups the user is part of
   users: [], // List of all users for one-on-one chats
   chats: {}, // Chat history organized by chat ID (both group and one-on-one)
-  usersWithChat:[]
+  usersWithChat:[],
+  symmetricDecyptedKey:null
 };
 
 const chatSlice = createSlice({
@@ -20,6 +21,9 @@ const chatSlice = createSlice({
     },
     setChats(state,action){
       state.chats = action.payload;
+    },
+    setSymmetricDecryptedKey(state,action){
+      state.symmetricDecyptedKey = action.payload;
     },
     setMessages(state, action) {
       state.messages = action.payload;
@@ -82,7 +86,8 @@ export const {
   addGroupMember,
   removeGroupMember,
   setMessages,
-  clearChatData
+  clearChatData,
+  setSymmetricDecryptedKey
 } = chatSlice.actions;
 
 export default chatSlice.reducer;

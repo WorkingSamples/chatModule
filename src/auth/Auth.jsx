@@ -56,10 +56,8 @@ const LoginSignup = () => {
     const userDoc = await getDoc(userDocRef);
 
     if (userDoc.exists()) {
-      console.log("userdoc exist");
 
       const userInfo = userDoc.data();
-      console.log(userInfo, "userinfoo");
 
 
       // Dispatch user data to Redux or any state manager
@@ -83,7 +81,6 @@ const LoginSignup = () => {
         if (isSignup) {
           await signup(formState.email, formState.password, formState.firstName, formState.lastName)
             .then((userCredential) => {
-              console.log(userCredential, "userr");
               const { uid, email } = userCredential; // Extract serializable fields
               getUserInfo(uid, email, "Signup successful!");
             })
@@ -96,7 +93,6 @@ const LoginSignup = () => {
           await login(formState.email, formState.password)
             .then((userCredential) => {
               const user = userCredential.user;
-              console.log(userCredential, "user cred after login");
   
               const { uid, email } = user; // Extract serializable fields
               getUserInfo(uid, email, "Login successful!");

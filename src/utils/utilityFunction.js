@@ -1,10 +1,13 @@
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/firebase";
+import CryptoJS from "crypto-js";
+import forge from 'node-forge'
 
 export const getOtherUserInfo = async (otherUserId) => {
     const userRef = doc(db, 'users', otherUserId);
     const userDoc = await getDoc(userRef);
     const otherUserInfo = userDoc.data();
+    console.log(otherUserInfo,"otherUserInfo")
 
     return otherUserInfo?.lastName
         ? `${otherUserInfo?.firstName} ${otherUserInfo?.lastName}`
@@ -12,6 +15,7 @@ export const getOtherUserInfo = async (otherUserId) => {
 };
 
 export const displayName = async (chatData, currentUser) => {
+    
     if (chatData) {
         if (chatData?.isGroup) {
             return chatData?.groupDetails?.groupName;
@@ -24,7 +28,7 @@ export const displayName = async (chatData, currentUser) => {
     }
 };
 
-export const currentUserName = async(currentUser)=>{
+export const currentUserName = async (currentUser) => {
     const userRef = doc(db, 'users', currentUser.uid);
     const userDoc = await getDoc(userRef);
     const currentUserInfo = userDoc.data();
@@ -33,3 +37,62 @@ export const currentUserName = async(currentUser)=>{
         ? `${currentUserInfo?.firstName} ${currentUserInfo?.lastName}`
         : currentUserInfo?.firstName;
 }
+
+export const decryptMessage = (encryptedMessage, decryptedSymmetricKey) => {
+    const bytes = CryptoJS.AES.decrypt(encryptedMessage, decryptedSymmetricKey);
+    const originalMessage = bytes.toString(CryptoJS.enc.Utf8);
+    return originalMessage;
+};
+
+export const getUserPvtKey = async (currentUser, setUserPrivateKey) => {
+    //get pvt key of current user to decrypt symmetric key of group
+    const userRef = doc(db, 'users', currentUser.uid)
+    const userDoc = await getDoc(userRef);
+    setUserPrivateKey(userDoc.data().privateKey)
+}
+
+export const decryptOneonOneMessage = (encryptedMessage, userPrivateKey) => {
+    console.log(encryptedMessage, "encrypted message", userPrivateKey)
+    const privateKeyObj = forge.pki.privateKeyFromPem(userPrivateKey);
+    const decodedMessage = forge.util.decode64(encryptedMessage); // Decode Base64
+    const decryptedMessage = privateKeyObj.decrypt(decodedMessage, 'RSA-OAEP');
+    return decryptedMessage; // Original message
+};
+
+export const generateSymmetricKey = () => {
+    const symmetricKey = CryptoJS.lib.WordArray.random(32).toString(); // 256-bit key
+    return symmetricKey;
+};
+
+export const encryptSymmetricKey = (symmetricKey, publicKey) => {
+    const publicKeyObj = forge.pki.publicKeyFromPem(publicKey);
+    const encryptedKey = publicKeyObj.encrypt(symmetricKey, "RSA-OAEP");
+    return forge.util.encode64(encryptedKey); // Base64 encoded
+};
+
+const decryptSymmetricKey = (encryptedKey, privateKey) => {
+    const privateKeyObj = forge.pki.privateKeyFromPem(privateKey);
+    const decryptedKey = privateKeyObj.decrypt(forge.util.decode64(encryptedKey), "RSA-OAEP");
+    return decryptedKey;
+};
+
+export const fetchSymmetricDecryptedKey = async (chatId, userId, privateKey) => {
+    // Fetch group details
+    const chatRef = doc(db, "chats", chatId);
+    const chatDoc = await getDoc(chatRef);
+
+    if (chatDoc.exists()) {
+        const encryptedKey = chatDoc.data().encryptedKeys[userId];
+        console.log("encrypted key:", encryptedKey, "of user:", userId)
+
+        if (!encryptedKey) {
+            throw new Error("Encrypted group key not found for user");
+        }
+
+        // Decrypt the symmetric key using the user's private key
+        const decryptedKey = decryptSymmetricKey(encryptedKey, privateKey);
+        return decryptedKey;
+    }
+
+    throw new Error("Group not found");
+};
