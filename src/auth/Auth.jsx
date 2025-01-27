@@ -65,7 +65,7 @@ const LoginSignup = () => {
       dispatch(setStatus("success"));
 
       toast.success(message);
-      navigate('/chat')
+      navigate('/')
     } else {
       toast.error("User information not found in Firestore.");
     }
@@ -119,7 +119,7 @@ const LoginSignup = () => {
       const { uid, email, displayName } = user; // Extract necessary details
       dispatch(setUser({ uid, email, displayName }));
       toast.success("Login successful!");
-      navigate("/chat");
+      navigate("/");
     } catch (error) {
       dispatch(setStatus("error"));
       toast.error(error.message || "Google Sign-In failed.");
