@@ -1,3 +1,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@keyframes blink {
+    0% { background-color: gray; }
+    50% { background-color: transparent; }
+    100% { background-color: gray; }
+  }
+  
+  .blink {
+    animation: blink 1s ease-in-out 2;
+    border-radius: 2%;
+  }

@@ -1,25 +1,33 @@
 import { useState } from "react";
 import { Dialog } from "@headlessui/react";
 import { useDispatch, useSelector } from "react-redux";
-import { collection, doc, getDoc, getDocs, query, setDoc, where } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  setDoc,
+  where,
+} from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import toast from "react-hot-toast";
-import { v4 as uuidv4 } from 'uuid'
+import { v4 as uuidv4 } from "uuid";
 import { setGroups } from "../../store/chatSlice";
 import { setLoading } from "../../store/loadingSlice";
 import CryptoJS from "crypto-js";
 import forge from "node-forge";
-import { encryptSymmetricKey, generateSymmetricKey } from "../../utils/utilityFunction";
+import {
+  encryptSymmetricKey,
+  generateSymmetricKey,
+} from "../../utils/utilityFunction";
+import { NameInitial } from "../../components/Utils";
 
-export default function GroupDialogBox({
-  isModalOpen,
-  setIsModalOpen
-}) {
+export default function GroupDialogBox({ isModalOpen, setIsModalOpen }) {
   const dispatch = useDispatch();
   const users = useSelector((state) => state.chat.users);
   const currentUser = useSelector((state) => state.user.currentUser);
   const sidebarOption = useSelector((state) => state.sidebar);
-
 
   const [groupName, setGroupName] = useState("");
   const [groupIcon, setGroupIcon] = useState("");
@@ -41,7 +49,7 @@ export default function GroupDialogBox({
     }
 
     //add current user id too
-    selectedUsers.push(currentUser?.uid)
+    selectedUsers.push(currentUser?.uid);
 
     const symmetricKey = generateSymmetricKey();
     const encryptedKeys = {};
@@ -53,7 +61,10 @@ export default function GroupDialogBox({
 
       if (userSnapshot.exists()) {
         const publicKey = userSnapshot.data().publicKey;
-        encryptedKeys[participant] = encryptSymmetricKey(symmetricKey, publicKey);
+        encryptedKeys[participant] = encryptSymmetricKey(
+          symmetricKey,
+          publicKey
+        );
       }
     }
 
@@ -72,11 +83,11 @@ export default function GroupDialogBox({
         createdAt: Date.now(),
       },
       encryptedKeys,
-      callDetails: null
+      callDetails: null,
     };
 
     await setDoc(chatRef, newGroupChat);
-    toast.success("Group chat created successfully!")
+    toast.success("Group chat created successfully!");
     console.log("Group chat created successfully!");
 
     //load new group in the groupsList if "groups tab" selected in sidebar
@@ -154,19 +165,20 @@ export default function GroupDialogBox({
                   className="flex items-center justify-between py-2 border-b border-gray-200"
                 >
                   <div className="flex items-center space-x-3">
-                    <img
-                      src={user.photoURL || "https://via.placeholder.com/40"}
-                      alt={user.displayName || "User"}
-                      className="w-8 h-8 rounded-full"
-                    />
-                    <span>{user.firstName}{" "}{user?.lastName}</span>
+                    <div className="w-12 h-12 rounded-lg bg-gray-300">
+                      <NameInitial id={user?.uid} />
+                    </div>
+                    <span>
+                      {user.firstName} {user?.lastName}
+                    </span>
                   </div>
                   <button
                     onClick={() => toggleUserSelection(user.uid)}
-                    className={`px-3 py-1 text-sm font-medium rounded ${selectedUsers.includes(user.uid)
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-100 text-gray-700"
-                      }`}
+                    className={`px-3 py-1 text-sm font-medium rounded ${
+                      selectedUsers.includes(user.uid)
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-100 text-gray-700"
+                    }`}
                   >
                     {selectedUsers.includes(user.uid) ? "Added" : "Add"}
                   </button>
