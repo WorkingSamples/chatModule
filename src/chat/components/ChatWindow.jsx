@@ -37,6 +37,7 @@ import CryptoJS from "crypto-js";
 import { NameInitial } from "../../components/Utils";
 import EmojiPicker from "emoji-picker-react";
 import { setUsersStatus } from "../../store/userSlice";
+import { CgBot } from "react-icons/cg";
 
 const SenderName = ({ senderId }) => {
   const [name, setName] = useState(null);
@@ -69,10 +70,7 @@ const ReplyMsgContent = ({ messageId, activeChat, symmetricDecyptedKey }) => {
         (msg) => msg?.messageId === messageId
       );
 
-      console.log(foundMessage, "foundmessageee");
-
       if (foundMessage) {
-        console.log("here", "foundmessageee");
         setMessage(foundMessage);
       } else {
         console.log("Message not found");
@@ -89,7 +87,9 @@ const ReplyMsgContent = ({ messageId, activeChat, symmetricDecyptedKey }) => {
   return (
     <div>
       {message?.text && (
-        <span className="cursor-pointer">{decryptMessage(message?.text, symmetricDecyptedKey)}</span>
+        <span className="cursor-pointer">
+          {decryptMessage(message?.text, symmetricDecyptedKey)}
+        </span>
       )}
       {message?.file && <span className="cursor-pointer">File</span>}
     </div>
@@ -111,15 +111,14 @@ const ChatWindow = () => {
   const [loading, setLoading] = useState(false);
   const [emojiPopupOpen, setEmojiPopupOpen] = useState(false);
   const [previewMsg, setPreviewMsg] = useState(null);
+  const [botMessages, setBotMessages] = useState([]);
+
+  // const chatRefHook = useRef(null);
+  const messageRefs = useRef({}); // Store refs for all messages
+  const lastMessageRef = useRef(null);
 
   const zpRef = useRef(null);
   const useZegoInstance = (currentUser, roomId) => {
-    console.log(
-      "App id:",
-      import.meta.env.VITE_APP_ZEGO_APP_ID,
-      "server secret:",
-      import.meta.env.VITE_APP_ZEGO_SERVER_SECRET
-    );
     if (!zpRef.current) {
       const appId = parseInt(import.meta.env.VITE_APP_ZEGO_APP_ID);
       const serverSecret = import.meta.env.VITE_APP_ZEGO_SERVER_SECRET;
@@ -247,10 +246,6 @@ const ChatWindow = () => {
     };
   }, []);
 
-  // const chatRefHook = useRef(null);
-  const messageRefs = useRef({}); // Store refs for all messages
-  const lastMessageRef = useRef(null);
-
   useEffect(() => {
     lastMessageRef?.current?.scrollIntoView({
       behavior: "smooth",
@@ -318,7 +313,7 @@ const ChatWindow = () => {
           status: userData?.status,
         });
       });
-      console.log(activityStatus, "activityStatus");
+
       dispatch(setUsersStatus(activityStatus));
     });
 
@@ -363,9 +358,10 @@ const ChatWindow = () => {
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !loading && currentMessage.trim()) {
-      sendMessage();
+      sidebarOption?.ai ? sendChatBotMessage() : sendMessage();
     }
   };
+
   const sendMessage = async () => {
     setEmojiPopupOpen(false);
     setLoading(true);
@@ -577,12 +573,39 @@ const ChatWindow = () => {
     }
   };
 
+  const sendChatBotMessage = async () => {
+    console.log("send chat bot message", currentMessage);
+    setBotMessages((prev) => [
+      ...prev,
+      { role: "user", message: currentMessage },
+    ]);
+    setCurrentMesage("");
+    const url = `${import.meta.env.VITE_APP_SERVER_URL}/chat-bot`
+    const responseMsg = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json", // <-- Add this line
+      },
+      body: JSON.stringify({ prompt: currentMessage }),
+    });
+
+    const responseText = await responseMsg.text(); // Use .text() instead of .json()
+    setBotMessages((prev) => [
+      ...prev,
+      { role: "assistant", message: responseText },
+    ]);
+    lastMessageRef?.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
+
   return (
     <div className="flex w-[80%] h-[97%] bg-gray-100 rounded-3xl">
       {sidebarOption?.chats && <ChatList />}
       {sidebarOption?.users && <UsersList />}
       {sidebarOption?.groups && <GroupsList />}
-
+      {console.log(botMessages, "botmessages")}
       <div className="flex-1 flex flex-col">
         <div className="p-4 border-b rounded-tr-3xl">
           {activeChat ? (
@@ -610,53 +633,95 @@ const ChatWindow = () => {
                 {/* <BsThreeDotsVertical size={20} className='mr-12 text-gray-600 cursor-pointer' /> */}
               </div>
             </div>
+          ) : sidebarOption?.ai ? (
+            <>
+              <div className="text-xl font-bold flex items-center gap-x-4">
+                <CgBot size={40} />
+                Chat Bot
+              </div>
+            </>
           ) : (
             <div className="text-xl font-bold">Infinity Chat</div>
           )}
         </div>
 
-        <div className="flex-1 p-4 overflow-y-scroll">
-          {activeChat ? (
-            chats ? (
-              (() => {
-                const activeChatData = chats.find(
-                  (chat) => chat.chatId === activeChat
+        {sidebarOption?.ai ? (
+          <div className="flex-1 p-4 overflow-y-scroll">
+            {botMessages.length > 0 ? (
+              botMessages?.map((msg,index) => {
+                const isLastMessage =
+                index === botMessages.length - 1;
+                return (
+                  <div
+                    key={msg.messageId} // Ensure each item has a unique key
+                    ref={(el)=>{
+                      if (isLastMessage) lastMessageRef.current = el;
+                    }}
+                    className={`flex ${
+                      msg.role === "user" ? "justify-end" : "justify-start"
+                    } my-3`}
+                  >
+                    <div
+                      className={`px-3 py-2 rounded-b-lg ${
+                        msg.role === "user"
+                          ? "bg-purple-700 text-white"
+                          : "bg-gray-200 text-gray-800"
+                      }`}
+                    >
+                      {msg?.message}
+                    </div>
+                  </div>
                 );
-
-                if (!activeChatData) {
-                  // Active chat ID is not found in the chats array
-                  return (
-                    <div className="h-full flex items-center justify-center">
-                      <div className="flex flex-col items-center">
-                        <FaRegMessage size={80} className="text-gray-400" />
-                        <span className="text-gray-400 text-lg font-semibold">
-                          No Conversation
-                        </span>
-                      </div>
-                    </div>
+              })
+            ) : (
+              <div className="text-center font-medium">
+               <div>Having Question ? </div> 
+               <div> Let's start a short conversation</div> 
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex-1 p-4 overflow-y-scroll">
+            {activeChat ? (
+              chats ? (
+                (() => {
+                  const activeChatData = chats.find(
+                    (chat) => chat.chatId === activeChat
                   );
-                }
 
-                if (!activeChatData.messages?.length) {
-                  // Active chat has no messages
-                  return (
-                    <div className="h-full flex items-center justify-center">
-                      <div className="flex flex-col items-center">
-                        <MdOutlineChat size={80} className="text-gray-400" />
-                        <span className="text-gray-400 text-lg font-semibold">
-                          Start your First Conversation
-                        </span>
+                  if (!activeChatData) {
+                    // Active chat ID is not found in the chats array
+                    return (
+                      <div className="h-full flex items-center justify-center">
+                        <div className="flex flex-col items-center">
+                          <FaRegMessage size={80} className="text-gray-400" />
+                          <span className="text-gray-400 text-lg font-semibold">
+                            No Conversation
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  );
-                }
+                    );
+                  }
 
-                // Render messages
-                return activeChatData.messages.map((msg, index) => {
-                  const isLastMessage =
-                    index === activeChatData.messages.length - 1;
-                  return (
-                    <>
+                  if (!activeChatData.messages?.length) {
+                    // Active chat has no messages
+                    return (
+                      <div className="h-full flex items-center justify-center">
+                        <div className="flex flex-col items-center">
+                          <MdOutlineChat size={80} className="text-gray-400" />
+                          <span className="text-gray-400 text-lg font-semibold">
+                            Start your First Conversation
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // Render messages
+                  return activeChatData.messages.map((msg, index) => {
+                    const isLastMessage =
+                      index === activeChatData.messages.length - 1;
+                    return (
                       <div
                         key={msg.messageId}
                         ref={(el) => {
@@ -746,7 +811,7 @@ const ChatWindow = () => {
                                 </a>
                               )}
 
-                              <div className="text-sm flex justify-between mt-2">
+                              <div className="text-xs flex justify-between mt-2">
                                 <span>{formattedTime(msg.timestamp)}</span>
                               </div>
                             </div>
@@ -766,33 +831,33 @@ const ChatWindow = () => {
                           </div>
                         )}
                       </div>
-                    </>
-                  );
-                });
-              })()
+                    );
+                  });
+                })()
+              ) : (
+                // Chats array is undefined
+                <div className="h-full flex items-center justify-center">
+                  <div className="flex flex-col items-center">
+                    <FaRegMessage size={80} className="text-gray-400" />
+                    <span className="text-gray-400 text-lg font-semibold">
+                      No Chats
+                    </span>
+                  </div>
+                </div>
+              )
             ) : (
-              // Chats array is undefined
+              // No active chat selected
               <div className="h-full flex items-center justify-center">
                 <div className="flex flex-col items-center">
                   <FaRegMessage size={80} className="text-gray-400" />
                   <span className="text-gray-400 text-lg font-semibold">
-                    No Chats
+                    No Selected Chat
                   </span>
                 </div>
               </div>
-            )
-          ) : (
-            // No active chat selected
-            <div className="h-full flex items-center justify-center">
-              <div className="flex flex-col items-center">
-                <FaRegMessage size={80} className="text-gray-400" />
-                <span className="text-gray-400 text-lg font-semibold">
-                  No Selected Chat
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
 
         {/* preview files  */}
         <div className="mt-4">
@@ -862,33 +927,37 @@ const ChatWindow = () => {
         )}
 
         <div className="p-4 relative bg-white border-t rounded-br-3xl flex">
-          <div className="relative">
-            {/* File Input - Hidden */}
-            <input
-              type="file"
-              id="file-upload"
-              className="hidden"
-              multiple
-              onChange={handleFileChange} // Handle file selection
-            />
-
-            <FaSmileBeam
-              size={20}
-              className="text-gray-600 left-4 top-[11px] absolute cursor-pointer"
-              onClick={() => setEmojiPopupOpen((prev) => !prev)}
-            />
-
-            {/* Icon wrapped with a label */}
-            <label htmlFor="file-upload">
-              <FaPaperclip
-                size={20}
-                className="text-gray-600 left-10 top-[11px] absolute cursor-pointer"
+          {!sidebarOption?.ai && (
+            <div className="relative">
+              {/* File Input - Hidden */}
+              <input
+                type="file"
+                id="file-upload"
+                className="hidden"
+                multiple
+                onChange={handleFileChange} // Handle file selection
               />
-            </label>
-          </div>
+
+              <FaSmileBeam
+                size={20}
+                className="text-gray-600 left-4 top-[11px] absolute cursor-pointer"
+                onClick={() => setEmojiPopupOpen((prev) => !prev)}
+              />
+
+              {/* Icon wrapped with a label */}
+              <label htmlFor="file-upload">
+                <FaPaperclip
+                  size={20}
+                  className="text-gray-600 left-10 top-[11px] absolute cursor-pointer"
+                />
+              </label>
+            </div>
+          )}
           <input
             type="text"
-            className="flex-1 pl-16 border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            className={`flex-1 ${
+              sidebarOption?.ai ? "pl-4" : "pl-16"
+            } border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none`}
             placeholder="Type a message..."
             onKeyDown={(e) => handleKeyDown(e)}
             value={currentMessage}
@@ -902,7 +971,7 @@ const ChatWindow = () => {
               <BsSend
                 size={20}
                 className="text-gray-600 cursor-pointer"
-                onClick={sendMessage}
+                onClick={sidebarOption?.ai ? sendChatBotMessage : sendMessage}
               />
             )}
           </span>

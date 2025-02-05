@@ -8,7 +8,7 @@ import {
 } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { AiOutlinePlusCircle } from "react-icons/ai";
-import { CgLogOut } from "react-icons/cg";
+import { CgBot, CgLogOut } from "react-icons/cg";
 import { FaInfinity, FaUsers } from "react-icons/fa";
 import { FaMessage, FaPerson, FaUserGroup } from "react-icons/fa6";
 import { db } from "../../firebase/firebase";
@@ -178,6 +178,11 @@ const Sidebar = () => {
     }
   }
 
+  const handleChatBot = async()=>{
+    dispatch(setSidebarOption({ key: "ai", value: true }));
+
+  }
+
   return (
     <>
       <div className="w-35 flex flex-col items-center p-4 h-full">
@@ -215,6 +220,16 @@ const Sidebar = () => {
         >
           <FaUserGroup className="h-[24px] w-[24px]" />
           <span className="text-[13px]">Groups</span>
+        </div>
+        <div
+           className={`mb-6 text-gray-400 flex flex-col cursor-pointer items-center hover:text-white hover:bg-gray-700 rounded-lg h-[10%] w-[70px] justify-center ${sidebarOption?.ai
+            ? "text-white bg-gray-700"
+            : "hover:text-white hover:bg-gray-700"
+            } rounded-lg h-[10%] w-[70px] justify-center`}
+          onClick={handleChatBot}
+        >
+          <CgBot size={40}/>
+          <span className="text-[13px]">Bot</span>
         </div>
         <div
           className="mb-6 text-gray-400 flex flex-col cursor-pointer items-center hover:text-white hover:bg-gray-700 rounded-lg h-[10%] w-[70px] justify-center"

@@ -5,7 +5,8 @@ const sidebarSlice = createSlice({
     initialState: {
         users: false,
         chats: false,
-        groups: false
+        groups: false,
+        ai:false,
     },
     reducers: {
         setSidebarOption(state, action) {

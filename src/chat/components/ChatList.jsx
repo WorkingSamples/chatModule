@@ -124,7 +124,6 @@ const ChatList = () => {
     const otherParticipantId = chat?.participants?.filter(
       (participant) => participant !== currentUser?.uid
     )[0];
-    console.log(otherParticipantId, "otherparticipant");
     console.log(
       usersStatus.find((el) => el?.userId === otherParticipantId)?.status ===
         "online",
