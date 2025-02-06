@@ -1,4 +1,3 @@
-import { FaSearch } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import Loader from "../../utils/Loader";
 import {
@@ -10,7 +9,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
 import moment from "moment";
 import { useEffect, useState } from "react";
-import forge from "node-forge";
+
 import {
   decryptMessage,
   fetchSymmetricDecryptedKey,
@@ -21,7 +20,7 @@ const GroupsList = () => {
   const dispatch = useDispatch();
 
   const { activeChat, chats } = useSelector((state) => state.chat);
-  const { currentUser, userPvtKey } = useSelector((state) => state.user);
+  const { currentUser } = useSelector((state) => state.user);
   const loading = useSelector((state) => state.loading.groups);
 
   const [groups, setGroups] = useState([]);
@@ -72,11 +71,8 @@ const GroupsList = () => {
   const handleGroupClick = async (group) => {
     const chatRoomId = group.chatId; // Unique chatroom ID based on user IDs
     dispatch(setActiveChat(chatRoomId));
-    // dispatch(setOtherUser(otherUser));
 
     // //get pvt key of current user to decrypt symmetric key of group
-    // const userRef = doc(db, 'users', currentUser.uid)
-    // const userDoc = await getDoc(userRef);
 
     //chatData to get encrypted pvt key of user
     const chatRef = doc(db, "chats", chatRoomId);
@@ -117,16 +113,6 @@ const GroupsList = () => {
 
   return (
     <div className="w-72 overflow-y-scroll mt-4">
-      {/* <div className='relative p-2 mt-2'>
-                <input
-                    className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    type='text'
-                    name='searchUser'
-                    value='james'
-                    placeholder='Search User'
-                />
-                <FaSearch className='absolute right-4 top-5 h-4 w-4 cursor-pointer' />
-            </div> */}
       {loading ? (
         <Loader />
       ) : groups && groups.length > 0 ? (
@@ -139,12 +125,11 @@ const GroupsList = () => {
             onClick={() => handleGroupClick(group)}
           >
             <div className="w-12 h-12 rounded-lg bg-gray-300">
-                <InitialName group={group}/>
+              <InitialName group={group} />
             </div>
             <div className="ml-4">
               <p className="font-bold">{group.groupDetails?.groupName}</p>
-              {/* {messages && activeChat && activeChat.split('_').includes(user.uid) && <p className="text-sm text-gray-600">{messages[messages.length - 1].text}</p>} */}
-
+          
               <p className="text-sm text-gray-600">
                 {group?.messages[group?.messages?.length - 1]?.text
                   ? decryptMessage(
@@ -161,7 +146,7 @@ const GroupsList = () => {
                   group?.messages[group?.messages.length - 1]?.timestamp
                 ).format("h:mm A")}
             </span>
-            {/* <span className="ml-auto text-xs">{chat.time}</span> */}
+       
           </div>
         ))
       ) : (

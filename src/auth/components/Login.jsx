@@ -56,24 +56,6 @@ const Login = ({ loading,formState, setFormState, setIsSignup, handleSubmit, pen
                 </div>
                 <span className='text-red-500 text-sm font-semibold'>{errors}</span>
 
-                {/* <div className="flex items-center mt-4">
-                    <input
-                        type="checkbox"
-                        id="terms"
-                        className="mr-2 w-4 h-4 text-blue-600"
-                    />
-                    <label htmlFor="terms" className="text-sm text-gray-500">
-                        I agree to the platform's{" "}
-                        <a href="#terms" className="text-blue-500">
-                            Terms of Service
-                        </a>{" "}
-                        and{" "}
-                        <a href="#privacy" className="text-blue-500">
-                            Privacy Policy
-                        </a>
-                    </label>
-                </div> */}
-
                 <button
                     type="submit"
                     className="w-full flex justify-center items-center bg-blue-500 disabled:bg-gray-400 disabled:cursor-wait text-white py-3 rounded-md mt-6 shadow-md hover:bg-blue-600"

@@ -1,12 +1,8 @@
-import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/firebase";
 import CryptoJS from "crypto-js";
 import forge from "node-forge";
 import moment from "moment";
-
-export const getDay = async(messages)=>{
-
-}
 
 export const getOtherUserInfo = async (otherUserId) => {
   const userRef = doc(db, "users", otherUserId);

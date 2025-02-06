@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from "react";
-import InputField from "../../components/InputField";
-import { FaSearch } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import Loader from "../../utils/Loader";
-import moment from "moment";
+
 import {
   setActiveChat,
-  setMessages,
   setOtherUser,
   setSymmetricDecryptedKey,
 } from "../../store/chatSlice";
@@ -114,7 +111,7 @@ const ChatList = () => {
       const userId = chat?.participants?.filter(
         (participant) => participant !== currentUser?.uid
       )[0];
-      console.log(userId, "useriddd");
+
       return <NameInitial id={userId} />;
     }
   };
@@ -124,11 +121,6 @@ const ChatList = () => {
     const otherParticipantId = chat?.participants?.filter(
       (participant) => participant !== currentUser?.uid
     )[0];
-    console.log(
-      usersStatus.find((el) => el?.userId === otherParticipantId)?.status ===
-        "online",
-      "online"
-    );
 
     return (
       usersStatus.find((el) => el?.userId === otherParticipantId)?.status ===
@@ -156,8 +148,18 @@ const ChatList = () => {
               <InitialName chat={chat} />
             </div>
             <div className="ml-4">
-              <DisplayNameComponent chatData={chat} currentUser={currentUser} />
-              {/* <p className="font-bold">{displayName(chat,currentUser)}</p> */}
+              <div className="flex gap-x-2 items-center justify-between">
+                <DisplayNameComponent
+                  chatData={chat}
+                  currentUser={currentUser}
+                />
+                {chat?.isGroup && (
+                  <span className="bg-gray-400 text-white shadow-md text-xs p-1 rounded-md">
+                    group
+                  </span>
+                )}
+              </div>
+
               <p className="text-sm text-gray-600">
                 {chat?.messages[chat?.messages?.length - 1]?.text
                   ? decryptMessage(
@@ -168,13 +170,10 @@ const ChatList = () => {
               </p>
             </div>
             <span className="ml-auto text-xs">
-              {/* {chat?.messages[chat?.messages.length - 1]?.timestamp &&
-                moment(
+              {chat?.messages?.length !== 0 &&
+                formattedTime(
                   chat?.messages[chat?.messages.length - 1]?.timestamp
-                ).format("h:mm A")} */}
-              {formattedTime(
-                chat?.messages[chat?.messages.length - 1]?.timestamp
-              )}
+                )}
             </span>
           </div>
         ))

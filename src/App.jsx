@@ -10,12 +10,9 @@ function App() {
         {/* Public Route */}
         <Route path="/auth" element={<LoginSignup />} />
 
-
         {/* Protected Routes */}
         <Route path="/"  element={<ProtectedRoute />}>
           <Route path='/' element={<Chat />} />
-          {/* Add more protected routes here */}
-          {/* <Route path="/dashboard" element={<Dashboard />} /> */}
         </Route>
       </Routes>
     </BrowserRouter>

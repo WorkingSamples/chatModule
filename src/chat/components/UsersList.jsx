@@ -1,16 +1,13 @@
 import React, { useEffect, useState } from "react";
-import InputField from "../../components/InputField";
-import { FaSearch } from "react-icons/fa";
+
 import { useDispatch, useSelector } from "react-redux";
 import Loader from "../../utils/Loader";
 import {
   setActiveChat,
-  setMessages,
   setOtherUser,
   setSymmetricDecryptedKey,
 } from "../../store/chatSlice";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../../firebase/firebase";
+
 import { v4 as uuidv4 } from "uuid";
 import {
   fetchSymmetricDecryptedKey,
@@ -28,14 +25,12 @@ const UsersList = () => {
   const [userPrivateKey, setUserPrivateKey] = useState(null);
 
   useEffect(() => {
-    console.log(usersStatus, "usersStatus");
     if (!userPrivateKey) {
       getUserPvtKey(currentUser, setUserPrivateKey);
     }
   }, []);
 
   const handleUserClick = async (otherUser) => {
-    console.log(otherUser, "other user");
     let chatRoomId = null; // Unique chatroom ID based on user IDs
 
     //if any of the chat{not group} is having currentuser and other user as participant then set chatid as activechat else setup new active chat
@@ -46,13 +41,6 @@ const UsersList = () => {
         chat?.participants.includes(otherUser.uid)
     );
     if (chat) {
-      console.log(
-        chat,
-        "chat exist",
-        chatRoomId,
-        currentUser.uid,
-        userPrivateKey
-      );
       chatRoomId = chat.chatId;
       const decryptedKey = await fetchSymmetricDecryptedKey(
         chatRoomId,
@@ -67,28 +55,10 @@ const UsersList = () => {
 
     dispatch(setActiveChat(chatRoomId));
     dispatch(setOtherUser(otherUser));
-    // Check if the chatroom exists
-    // const chatRef = doc(db, "chats", chatRoomId);
-    // const chatDoc = await getDoc(chatRef);
-    // if (chatDoc.exists()) {
-    //     dispatch(setMessages(chatDoc.data().messages || [])); // Load existing messages
-    // } else {
-    //     dispatch(setMessages([])); // No chatroom exists yet
-    // }
   };
 
   return (
     <div className="w-72 overflow-y-scroll mt-4">
-      {/* <div className='relative p-2 mt-2'>
-                <input
-                    className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    type='text'
-                    name='searchUser'
-                    value='james'
-                    placeholder='Search User'
-                />
-                <FaSearch className='absolute right-4 top-5 h-4 w-4 cursor-pointer' />
-            </div> */}
       {loading ? (
         <Loader />
       ) : users && users.length > 0 ? (
@@ -111,9 +81,7 @@ const UsersList = () => {
               <p className="font-bold">
                 {user.firstName} {user.lastName}
               </p>
-              {/* {messages && activeChat && activeChat.split('_').includes(user.uid) && <p className="text-sm text-gray-600">{messages[messages.length - 1].text}</p>} */}
             </div>
-            {/* <span className="ml-auto text-xs">{chat.time}</span> */}
           </div>
         ))
       ) : (

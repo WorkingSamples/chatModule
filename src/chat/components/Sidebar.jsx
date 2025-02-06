@@ -179,17 +179,15 @@ const Sidebar = () => {
   }
 
   const handleChatBot = async()=>{
+    dispatch(setActiveChat(null))
     dispatch(setSidebarOption({ key: "ai", value: true }));
-
   }
 
   return (
     <>
       <div className="w-35 flex flex-col items-center p-4 h-full">
-        {/* <button className="mb-12 text-white">Icon</button> */}
         <div className="mb-12 cursor-pointer text-white">
           <FaInfinity size={35} />
-          {/* <span className='text-[13px]'>All chats</span> */}
         </div>
         <div
           onClick={handleUsers}
@@ -238,7 +236,7 @@ const Sidebar = () => {
           <AiOutlinePlusCircle className="h-[24px] w-[24px]" />
           <span className="text-[13px]">Add group</span>
         </div>
-        {/* <button className="mt-auto text-white">Log out</button> */}
+      
         <div
           className="mt-auto text-gray-400 flex flex-col cursor-pointer items-center hover:text-white hover:bg-gray-700 rounded-lg h-[10%] w-[70px] justify-center"
           onClick={handleLogout}

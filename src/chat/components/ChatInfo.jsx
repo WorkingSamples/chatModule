@@ -50,20 +50,11 @@ const ChatInfo = () => {
   useEffect(() => {
     if (!activeChat || sidebarOption.users) return;
     getParticipants();
-  }, [activeChat]);
+  }, [activeChat,sidebarOption]);
 
   return (
     <div className="w-[80%] h-[20%] md:w-[19%] md:h-[97%] flex flex-col space-y-2">
-      {/* <div className='bg-white h-[50%] rounded-3xl p-4'>
-                <h2 className="text-xl font-bold mb-2">Group Info</h2>
-                <h2 className="text-xl font-bold mb-4">Member Info</h2>
-                <p className="font-bold">Files</p>
-                <ul className="list-disc ml-4">
-                    <li>265 photos</li>
-                    <li>13 videos</li>
-                    <li>378 files</li>
-                </ul>
-            </div> */}
+    
       <div className="bg-white h-full rounded-3xl p-4">
         {loading ? (
           <Loader />
@@ -96,7 +87,7 @@ const ChatInfo = () => {
         ) : (
           <div className="text-center">No participants</div>
         )}
-        {/* <span className="ml-auto text-xs">{chat.time}</span> */}
+  
       </div>
     </div>
   );

@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import ChatList from "./ChatList";
-import { BsSend, BsThreeDotsVertical } from "react-icons/bs";
+import { BsSend } from "react-icons/bs";
 import { FaPaperclip, FaReply, FaSmileBeam } from "react-icons/fa";
 import { MdCall, MdOutlineChat, MdVideoCall } from "react-icons/md";
 import { FaRegMessage } from "react-icons/fa6";
 import UsersList from "./UsersList";
 import { useDispatch, useSelector } from "react-redux";
+import ReactMarkdown from "react-markdown";
 import {
   arrayUnion,
   collection,
@@ -17,7 +18,6 @@ import {
 } from "firebase/firestore";
 import { setChats, setSymmetricDecryptedKey } from "../../store/chatSlice";
 import { db } from "../../firebase/firebase";
-import moment from "moment";
 import { v4 as uuidv4 } from "uuid";
 import GroupsList from "./GroupsList";
 import { AiOutlineClose } from "react-icons/ai";
@@ -247,6 +247,8 @@ const ChatWindow = () => {
   }, []);
 
   useEffect(() => {
+    //turn of the picker on changing active chat
+    setEmojiPopupOpen(false);
     lastMessageRef?.current?.scrollIntoView({
       behavior: "smooth",
       block: "start",
@@ -373,7 +375,7 @@ const ChatWindow = () => {
     // get chat room data
     const chatRef = doc(db, "chats", chatRoomId);
     const chatDoc = await getDoc(chatRef);
-
+  
     //setup the chat room and get decrypted symmetric key
     if (!chatDoc.exists()) {
       //setup new chat
@@ -470,8 +472,16 @@ const ChatWindow = () => {
   };
 
   const handleFileChange = (e) => {
+    if(!activeChat) return;
     const files = Array.from(e.target.files);
+
+    // Reset the file input value to trigger onChange when the same file is selected again
+    e.target.value = "";
+
     const allowedTypes = [
+      "text/csv", // CSV files
+      "application/csv", // CSV alternative MIME type
+      "application/vnd.ms-excel", // CSV files (older Excel format)
       "application/zip",
       "application/x-zip-compressed", // Windows ZIP MIME type
       "application/x-zip",
@@ -496,12 +506,13 @@ const ChatWindow = () => {
     const validFiles = files.filter((file) => {
       if (!allowedTypes.includes(file.type)) {
         console.log(`Invalid file type: ${file.name}`);
+        toast.error(`Invalid file type: ${file.name}`)
         return false;
       }
       if (file.size > 2 * 1024 * 1024) {
         // File size validation (2 MB)
         console.log(`File size exceeds 2 MB: ${file.name}`);
-        toast.error(`File size exceeds 2 MB: ${file.name}`);
+        toast.error(`File size should not more than 2 MB: ${file.name}`);
         return false;
       }
       return true;
@@ -574,13 +585,13 @@ const ChatWindow = () => {
   };
 
   const sendChatBotMessage = async () => {
-    console.log("send chat bot message", currentMessage);
+      setLoading(true);
     setBotMessages((prev) => [
       ...prev,
       { role: "user", message: currentMessage },
     ]);
     setCurrentMesage("");
-    const url = `${import.meta.env.VITE_APP_SERVER_URL}/chat-bot`
+    const url = `${import.meta.env.VITE_APP_SERVER_URL}/chat-bot`;
     const responseMsg = await fetch(url, {
       method: "POST",
       headers: {
@@ -589,7 +600,7 @@ const ChatWindow = () => {
       body: JSON.stringify({ prompt: currentMessage }),
     });
 
-    const responseText = await responseMsg.text(); // Use .text() instead of .json()
+    const responseText = await responseMsg.text(); 
     setBotMessages((prev) => [
       ...prev,
       { role: "assistant", message: responseText },
@@ -598,14 +609,15 @@ const ChatWindow = () => {
       behavior: "smooth",
       block: "start",
     });
+    setLoading(false);
   };
 
   return (
     <div className="flex w-[80%] h-[97%] bg-gray-100 rounded-3xl">
+  
       {sidebarOption?.chats && <ChatList />}
       {sidebarOption?.users && <UsersList />}
       {sidebarOption?.groups && <GroupsList />}
-      {console.log(botMessages, "botmessages")}
       <div className="flex-1 flex flex-col">
         <div className="p-4 border-b rounded-tr-3xl">
           {activeChat ? (
@@ -613,25 +625,26 @@ const ChatWindow = () => {
               <div className="flex flex-col">
                 <div className="flex items-center gap-x-2">
                   <h2 className="text-xl font-bold">{userName}</h2>
-                  {/* <span className="bg-green-500 rounded-full w-[10px] h-[10px]"></span> */}
+               
                 </div>
-                {/* <p className="text-sm text-gray-500">23 members, 10 online</p> */}
+               
               </div>
-              <div className="flex space-x-4">
-                {/* <MdSearch size={20} className='text-gray-600  cursor-pointer' /> */}
-                <MdCall
-                  size={20}
-                  className=" text-gray-600 cursor-pointer"
-                  onClick={() => initiateCall("voice")}
-                />
-                <MdVideoCall
-                  size={20}
-                  className=" text-gray-600 cursor-pointer"
-                  onClick={() => initiateCall("video")}
-                />
+              {!sidebarOption?.ai && (
+                <div className="flex space-x-4">
+                 
+                  <MdCall
+                    size={20}
+                    className=" text-gray-600 cursor-pointer"
+                    onClick={() => initiateCall("voice")}
+                  />
+                  <MdVideoCall
+                    size={20}
+                    className=" text-gray-600 cursor-pointer"
+                    onClick={() => initiateCall("video")}
+                  />
 
-                {/* <BsThreeDotsVertical size={20} className='mr-12 text-gray-600 cursor-pointer' /> */}
-              </div>
+                </div>
+              )}
             </div>
           ) : sidebarOption?.ai ? (
             <>
@@ -648,13 +661,12 @@ const ChatWindow = () => {
         {sidebarOption?.ai ? (
           <div className="flex-1 p-4 overflow-y-scroll">
             {botMessages.length > 0 ? (
-              botMessages?.map((msg,index) => {
-                const isLastMessage =
-                index === botMessages.length - 1;
+              botMessages?.map((msg, index) => {
+                const isLastMessage = index === botMessages.length - 1;
                 return (
                   <div
                     key={msg.messageId} // Ensure each item has a unique key
-                    ref={(el)=>{
+                    ref={(el) => {
                       if (isLastMessage) lastMessageRef.current = el;
                     }}
                     className={`flex ${
@@ -668,15 +680,15 @@ const ChatWindow = () => {
                           : "bg-gray-200 text-gray-800"
                       }`}
                     >
-                      {msg?.message}
+                      <ReactMarkdown>{msg?.message}</ReactMarkdown>
                     </div>
                   </div>
                 );
               })
             ) : (
               <div className="text-center font-medium">
-               <div>Having Question ? </div> 
-               <div> Let's start a short conversation</div> 
+                <div>Having Question ? </div>
+                <div> Let's start a short conversation</div>
               </div>
             )}
           </div>
@@ -964,10 +976,10 @@ const ChatWindow = () => {
             onChange={(e) => setCurrentMesage(e.target.value)}
           />
           <span className="flex absolute right-8 top-[26px] space-x-3">
-            {/* <FaMicrophone size={20} className='text-gray-600 cursor-pointer' /> */}
             {loading ? (
-              <div className="animate-spin rounded-full border-t-blue-600 h-5 w-5"></div>
+              <div className="animate-spin rounded-full border-t-blue-600 border-4 h-5 w-5"></div>
             ) : (
+              
               <BsSend
                 size={20}
                 className="text-gray-600 cursor-pointer"

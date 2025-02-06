@@ -15,8 +15,7 @@ import toast from "react-hot-toast";
 import { v4 as uuidv4 } from "uuid";
 import { setGroups } from "../../store/chatSlice";
 import { setLoading } from "../../store/loadingSlice";
-import CryptoJS from "crypto-js";
-import forge from "node-forge";
+
 import {
   encryptSymmetricKey,
   generateSymmetricKey,

@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import Sidebar from './components/Sidebar';
-import ChatList from './components/ChatList';
 import ChatWindow from './components/ChatWindow';
 import ChatInfo from './components/ChatInfo';
 
 const Chat = () => {
-
     return (
         <div className='h-screen bg-blue-200 flex justify-center items-center'>
             <div className='h-[97%] w-[97%] bg-gray-900 rounded-3xl flex'>
