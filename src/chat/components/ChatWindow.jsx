@@ -103,7 +103,6 @@ const ChatWindow = () => {
   const { otherUser, activeChat, chats, symmetricDecyptedKey } = useSelector(
     (state) => state.chat
   );
-
   const [currentMessage, setCurrentMesage] = useState("");
   const [userName, setUserName] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState([]);
@@ -116,6 +115,29 @@ const ChatWindow = () => {
   // const chatRefHook = useRef(null);
   const messageRefs = useRef({}); // Store refs for all messages
   const lastMessageRef = useRef(null);
+  const emojiRef = useRef(null);
+  const iconRef = useRef(null);
+
+  useEffect(() => {
+    const handleEmojiClickOutside = (event) => {
+      if (
+        emojiRef.current &&
+        !emojiRef.current.contains(event.target) &&
+        iconRef.current &&
+        !iconRef.current.contains(event.target)
+      ) {
+        setEmojiPopupOpen(false);
+      }
+    };
+
+    if (emojiPopupOpen) {
+      document.addEventListener("mousedown", handleEmojiClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleEmojiClickOutside);
+    };
+  }, [emojiPopupOpen]);
 
   const zpRef = useRef(null);
   const useZegoInstance = (currentUser, roomId) => {
@@ -199,10 +221,8 @@ const ChatWindow = () => {
     if (!userPrivateKey) {
       getUserPvtKey(currentUser, setUserPrivateKey);
     }
-  }, []);
 
-  //track user status - online/offline
-  useEffect(() => {
+    //track user status - online/offline
     const userRef = doc(db, "users", currentUser?.uid);
 
     const setUserOnline = async () => {
@@ -375,7 +395,7 @@ const ChatWindow = () => {
     // get chat room data
     const chatRef = doc(db, "chats", chatRoomId);
     const chatDoc = await getDoc(chatRef);
-  
+
     //setup the chat room and get decrypted symmetric key
     if (!chatDoc.exists()) {
       //setup new chat
@@ -472,7 +492,7 @@ const ChatWindow = () => {
   };
 
   const handleFileChange = (e) => {
-    if(!activeChat) return;
+    if (!activeChat) return;
     const files = Array.from(e.target.files);
 
     // Reset the file input value to trigger onChange when the same file is selected again
@@ -506,7 +526,7 @@ const ChatWindow = () => {
     const validFiles = files.filter((file) => {
       if (!allowedTypes.includes(file.type)) {
         console.log(`Invalid file type: ${file.name}`);
-        toast.error(`Invalid file type: ${file.name}`)
+        toast.error(`Invalid file type: ${file.name}`);
         return false;
       }
       if (file.size > 2 * 1024 * 1024) {
@@ -585,7 +605,8 @@ const ChatWindow = () => {
   };
 
   const sendChatBotMessage = async () => {
-      setLoading(true);
+    if (!currentMessage) return;
+    setLoading(true);
     setBotMessages((prev) => [
       ...prev,
       { role: "user", message: currentMessage },
@@ -600,7 +621,7 @@ const ChatWindow = () => {
       body: JSON.stringify({ prompt: currentMessage }),
     });
 
-    const responseText = await responseMsg.text(); 
+    const responseText = await responseMsg.text();
     setBotMessages((prev) => [
       ...prev,
       { role: "assistant", message: responseText },
@@ -613,8 +634,7 @@ const ChatWindow = () => {
   };
 
   return (
-    <div className="flex w-[80%] h-[97%] bg-gray-100 rounded-3xl">
-  
+    <div className="flex w-full h-[97%] bg-gray-100 rounded-3xl">
       {sidebarOption?.chats && <ChatList />}
       {sidebarOption?.users && <UsersList />}
       {sidebarOption?.groups && <GroupsList />}
@@ -625,13 +645,10 @@ const ChatWindow = () => {
               <div className="flex flex-col">
                 <div className="flex items-center gap-x-2">
                   <h2 className="text-xl font-bold">{userName}</h2>
-               
                 </div>
-               
               </div>
               {!sidebarOption?.ai && (
                 <div className="flex space-x-4">
-                 
                   <MdCall
                     size={20}
                     className=" text-gray-600 cursor-pointer"
@@ -642,7 +659,6 @@ const ChatWindow = () => {
                     className=" text-gray-600 cursor-pointer"
                     onClick={() => initiateCall("video")}
                   />
-
                 </div>
               )}
             </div>
@@ -903,17 +919,6 @@ const ChatWindow = () => {
           ))}
         </div>
 
-        {/* emoji picker  */}
-        {emojiPopupOpen && (
-          <div className="mt-[150px] ml-4 absolute z-50 inline-block">
-            <EmojiPicker
-              onEmojiClick={(data) =>
-                setCurrentMesage((prevMessage) => prevMessage + data?.emoji)
-              }
-            />
-          </div>
-        )}
-
         {/* preview reply msg  */}
         {previewMsg && (
           <div className="p-2 px-4 mx-4 rounded-md bg-gray-200 flex justify-between">
@@ -938,6 +943,18 @@ const ChatWindow = () => {
           </div>
         )}
 
+        <div className="relative w-full">
+          {/* emoji picker  */}
+          {emojiPopupOpen && (
+            <div className="mb-1 left-0 z-50 absolute bottom-0" ref={emojiRef}>
+              <EmojiPicker
+                onEmojiClick={(data) =>
+                  setCurrentMesage((prevMessage) => prevMessage + data?.emoji)
+                }
+              />
+            </div>
+          )}
+        </div>
         <div className="p-4 relative bg-white border-t rounded-br-3xl flex">
           {!sidebarOption?.ai && (
             <div className="relative">
@@ -951,6 +968,7 @@ const ChatWindow = () => {
               />
 
               <FaSmileBeam
+                ref={iconRef}
                 size={20}
                 className="text-gray-600 left-4 top-[11px] absolute cursor-pointer"
                 onClick={() => setEmojiPopupOpen((prev) => !prev)}
@@ -979,7 +997,6 @@ const ChatWindow = () => {
             {loading ? (
               <div className="animate-spin rounded-full border-t-blue-600 border-4 h-5 w-5"></div>
             ) : (
-              
               <BsSend
                 size={20}
                 className="text-gray-600 cursor-pointer"

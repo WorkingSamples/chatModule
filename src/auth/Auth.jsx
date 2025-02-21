@@ -128,7 +128,7 @@ const LoginSignup = () => {
 
   return (
     <>
-      <AuthLayout>
+      {/* <AuthLayout> */}
         {isSignup ?
           <Signup
             formState={formState}
@@ -153,7 +153,7 @@ const LoginSignup = () => {
             setErrors={setErrors}
             handleGoogleSignIn={handleGoogleSignIn}
           />}
-      </AuthLayout>
+      {/* </AuthLayout> */}
     </>
   );
 };

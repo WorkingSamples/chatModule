@@ -27,7 +27,7 @@ const DisplayNameComponent = ({ chatData, currentUser }) => {
     fetchName();
   }, [chatData, currentUser]);
 
-  return <p className="font-bold">{name}</p>;
+  return <p className="font-bold text-sm">{name}</p>;
 };
 
 const ChatList = () => {
@@ -146,7 +146,7 @@ const ChatList = () => {
             <div className="w-12 h-12 rounded-lg relative bg-gray-300">
               <ActivityStatus chat={chat} />
               <InitialName chat={chat} />
-            </div>
+            </div>  
             <div className="ml-4">
               <div className="flex gap-x-2 items-center justify-between">
                 <DisplayNameComponent
@@ -154,13 +154,13 @@ const ChatList = () => {
                   currentUser={currentUser}
                 />
                 {chat?.isGroup && (
-                  <span className="bg-gray-400 text-white shadow-md text-xs p-1 rounded-md">
+                  <span className="bg-gray-400 mr-2 text-white shadow-md text-xs p-1 rounded-md">
                     group
                   </span>
                 )}
               </div>
 
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 truncate w-32">
                 {chat?.messages[chat?.messages?.length - 1]?.text
                   ? decryptMessage(
                       chat?.messages[chat?.messages?.length - 1]?.text,

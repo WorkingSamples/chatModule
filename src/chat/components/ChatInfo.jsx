@@ -53,7 +53,7 @@ const ChatInfo = () => {
   }, [activeChat,sidebarOption]);
 
   return (
-    <div className="w-[80%] h-[20%] md:w-[19%] md:h-[97%] flex flex-col space-y-2">
+    <div className="w-[80%] h-[20%] md:w-[19%] md:h-[97%] flex flex-col space-y-2 " >
     
       <div className="bg-white h-full rounded-3xl p-4">
         {loading ? (
