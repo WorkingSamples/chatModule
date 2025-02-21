@@ -85,7 +85,7 @@ const Signup = ({
             )}
           </button>
 
-          <div className="text-center mt-1">
+          <div className="text-center mt-2">
             <span className="text-gray-600 text-sm">Already have an account?</span>{" "}
             <button
               type="button"

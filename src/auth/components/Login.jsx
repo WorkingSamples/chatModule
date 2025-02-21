@@ -31,7 +31,7 @@ const Login = ({
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 md:p-8">
+      <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl px-6 py-4 md:px-8">
         <h2 className="text-2xl sm:text-3xl font-bold mt-8">Get started.</h2>
         <p className="text-gray-500 mb-6">Login to the platform</p>
 
@@ -65,7 +65,7 @@ const Login = ({
               "Login"
             )}
           </button>
-          <div className="text-center">
+          <div className="text-center mt-2">
             <span className="text-gray-600 text-sm">Dont have an account?</span>{" "}
             <span
               className="text-blue-500 font-semibold cursor-pointer text-sm"

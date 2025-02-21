@@ -8,9 +8,9 @@ const Chat = () => {
   const sidebarOption = useSelector((state) => state.sidebar);
   return (
     // <div className='h-screen bg-blue-200 flex justify-center items-center'>
-    <div className="h-screen bg-gray-900 flex">
+    <div className="h-screen bg-white flex">
       <Sidebar />
-      <div className="flex flex-col-reverse gap-y-2 md:flex-row md:items-center w-full md:space-x-2">
+      <div className="flex flex-col-reverse md:flex-row md:items-center w-full ">
         <ChatWindow />
         {!sidebarOption?.users && <ChatInfo />}
       </div>

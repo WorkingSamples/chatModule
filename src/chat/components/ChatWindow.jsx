@@ -634,12 +634,12 @@ const ChatWindow = () => {
   };
 
   return (
-    <div className="flex w-full h-[97%] bg-gray-100 rounded-3xl">
+    <div className="flex w-full h-full bg-gray-50 shadow-xl">
       {sidebarOption?.chats && <ChatList />}
       {sidebarOption?.users && <UsersList />}
       {sidebarOption?.groups && <GroupsList />}
       <div className="flex-1 flex flex-col">
-        <div className="p-4 border-b rounded-tr-3xl">
+        <div className="p-4 border-b  bg-white">
           {activeChat ? (
             <div className="flex justify-between items-center">
               <div className="flex flex-col">
