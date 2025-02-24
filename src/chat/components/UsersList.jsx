@@ -58,7 +58,7 @@ const UsersList = () => {
   };
 
   return (
-    <div className="w-72 overflow-y-scroll mt-4">
+    <div className="w-72 overflow-y-scroll mt-4 scrollbar">
       {loading ? (
         <Loader />
       ) : users && users.length > 0 ? (

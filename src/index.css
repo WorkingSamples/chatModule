@@ -12,3 +12,26 @@
     animation: blink 1s ease-in-out 2;
     border-radius: 2%;
   }
+  
+  @layer utilities {
+    .scrollbar::-webkit-scrollbar {
+      width: 12px;
+      height: 20px;
+    }
+  
+    .scrollbar::-webkit-scrollbar-track {
+      /* border-radius: 100vh; */
+      background:#f1eded ;
+    }
+  
+    .scrollbar::-webkit-scrollbar-thumb {
+      background:  #dddcd8;
+     
+      /* border-radius: 100vh; */
+      border: 3px solid  #dddcd8;
+    }
+/*   
+    .scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #c0a0b9;
+    } */
+  }

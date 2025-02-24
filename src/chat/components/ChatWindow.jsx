@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import ChatList from "./ChatList";
-import { BsSend } from "react-icons/bs";
+import { BsSend, BsSendFill } from "react-icons/bs";
 import { FaPaperclip, FaReply, FaSmileBeam } from "react-icons/fa";
 import { MdCall, MdOutlineChat, MdVideoCall } from "react-icons/md";
 import { FaRegMessage } from "react-icons/fa6";
@@ -87,7 +87,7 @@ const ReplyMsgContent = ({ messageId, activeChat, symmetricDecyptedKey }) => {
   return (
     <div>
       {message?.text && (
-        <span className="cursor-pointer">
+        <span className="cursor-pointer text-ellipsis line-clamp-2">
           {decryptMessage(message?.text, symmetricDecyptedKey)}
         </span>
       )}
@@ -692,7 +692,7 @@ const ChatWindow = () => {
                     <div
                       className={`px-3 py-2 rounded-b-lg ${
                         msg.role === "user"
-                          ? "bg-purple-700 text-white"
+                          ? "bg-purple-500 text-white"
                           : "bg-gray-200 text-gray-800"
                       }`}
                     >
@@ -709,7 +709,7 @@ const ChatWindow = () => {
             )}
           </div>
         ) : (
-          <div className="flex-1 p-4 overflow-y-scroll">
+          <div className="flex-1 p-4 overflow-y-scroll scrollbar">
             {activeChat ? (
               chats ? (
                 (() => {
@@ -773,7 +773,8 @@ const ChatWindow = () => {
                             <NameInitial id={msg?.senderId} />
                           </div>
                         )}
-                        <div className="flex items-start group">
+                        <div className={`flex items-start group ${ msg.senderId === currentUser?.uid && "justify-end"}`}>
+                          {/* reply icon  */}
                           {msg.senderId === currentUser?.uid && (
                             <div className="w-10 h-full flex items-center cursor-pointer text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity">
                               <FaReply
@@ -784,6 +785,7 @@ const ChatWindow = () => {
                           )}
 
                           <div className="max-w-[80%]">
+                            {/* message reply  */}
                             {msg?.replyTo && (
                               <div
                                 onClick={() => scrollToMessage(msg?.replyTo)}
@@ -797,18 +799,22 @@ const ChatWindow = () => {
                                 />
                               </div>
                             )}
+
+                            {/* message  div*/}
                             <div
-                              className={`px-3 py-2 rounded-b-lg ${
+                              className={`px-3 py-2 ${msg?.replyTo ? "rounded-b-lg" : msg.senderId === currentUser?.uid ? "rounded-b-lg rounded-tl-lg" : "rounded-b-lg rounded-tr-lg" }  ${
                                 msg.senderId === currentUser?.uid
-                                  ? "bg-purple-700 text-white"
-                                  : "bg-gray-200 text-gray-800"
+                                  ? "bg-purple-500 text-white"
+                                  : "bg-gray-100 text-gray-800"
                               }`}
                             >
+                              {/* sender name if chat is group  */}
                               {msg.senderId !== currentUser?.uid &&
                                 activeChatData.isGroup && (
                                   <SenderName senderId={msg.senderId} />
                                 )}
 
+                              {/* message  */}
                               {symmetricDecyptedKey && msg.text ? (
                                 <p>
                                   {decryptMessage(
@@ -817,6 +823,7 @@ const ChatWindow = () => {
                                   )}
                                 </p>
                               ) : (
+                                // files
                                 <a href={msg?.file?.fileUrl} target="_blank">
                                   {msg?.file.type?.startsWith("image") && (
                                     <img
@@ -834,7 +841,7 @@ const ChatWindow = () => {
                                   {(msg?.file.type?.startsWith("application") ||
                                     msg?.file.type?.startsWith("text") ||
                                     msg?.file.type?.startsWith("audio")) && (
-                                    <span>{msg?.file?.type}</span>
+                                    <span>{msg?.file?.name}</span>
                                   )}
                                 </a>
                               )}
@@ -924,7 +931,7 @@ const ChatWindow = () => {
           <div className="p-2 px-4 mx-4 rounded-md bg-gray-200 flex justify-between">
             <div className="flex flex-col">
               {previewMsg?.text && (
-                <span>
+                <span className="text-ellipsis line-clamp-2">
                   {" "}
                   {decryptMessage(previewMsg?.text, symmetricDecyptedKey)}
                 </span>
@@ -997,7 +1004,7 @@ const ChatWindow = () => {
             {loading ? (
               <div className="animate-spin rounded-full border-t-blue-600 border-4 h-5 w-5"></div>
             ) : (
-              <BsSend
+              <BsSendFill
                 size={20}
                 className="text-gray-600 cursor-pointer"
                 onClick={sidebarOption?.ai ? sendChatBotMessage : sendMessage}

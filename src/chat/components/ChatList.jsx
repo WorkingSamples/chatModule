@@ -131,7 +131,7 @@ const ChatList = () => {
   };
 
   return (
-    <div className="w-72 overflow-y-scroll mt-4">
+    <div className="w-72 overflow-y-scroll mt-4 scrollbar bg-gray-100">
       {loading ? (
         <Loader />
       ) : allChats && allChats.length > 0 ? (

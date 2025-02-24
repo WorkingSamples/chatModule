@@ -186,7 +186,7 @@ const Sidebar = () => {
   return (
     <>
       <div className="w-35 flex flex-col items-center p-4 h-full">
-        <div className="mb-12 cursor-pointer text-white">
+        <div className="mb-12 cursor-pointer text-gray-700">
           <FaInfinity size={35} />
         </div>
         <div

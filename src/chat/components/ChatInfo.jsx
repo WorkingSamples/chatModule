@@ -66,7 +66,7 @@ const ChatInfo = () => {
             {participants.length > 0 &&
               participants?.map((participant, index) => (
                 <div className="p-2 border-b flex items-center">
-                  <div className="w-10 h-8 rounded-full bg-gray-300">
+                  <div className="w-12 h-8 rounded-full bg-gray-300">
                     <NameInitial id={participant.uid} />
                   </div>
                   <div className="ml-4 flex justify-between w-full items-center">
