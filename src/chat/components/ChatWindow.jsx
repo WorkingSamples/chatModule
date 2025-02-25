@@ -28,13 +28,14 @@ import {
   fetchSymmetricDecryptedKey,
   formattedTime,
   generateSymmetricKey,
+  getDateCategory,
   getUserPvtKey,
 } from "../../utils/utilityFunction";
 import toast from "react-hot-toast";
 import { ZegoUIKitPrebuilt } from "@zegocloud/zego-uikit-prebuilt";
 import { ZIM } from "zego-zim-web";
 import CryptoJS from "crypto-js";
-import { NameInitial } from "../../components/Utils";
+import { ExpandableMessage, NameInitial } from "../../components/Utils";
 import EmojiPicker from "emoji-picker-react";
 import { setUsersStatus } from "../../store/userSlice";
 import { CgBot } from "react-icons/cg";
@@ -716,6 +717,7 @@ const ChatWindow = () => {
                   const activeChatData = chats.find(
                     (chat) => chat.chatId === activeChat
                   );
+                  let lastDateCategory = null;
 
                   if (!activeChatData) {
                     // Active chat ID is not found in the chats array
@@ -749,123 +751,157 @@ const ChatWindow = () => {
                   return activeChatData.messages.map((msg, index) => {
                     const isLastMessage =
                       index === activeChatData.messages.length - 1;
+
+                    const currentDateCategory = getDateCategory(msg.timestamp);
+                    const showDateSeparator =
+                      currentDateCategory !== lastDateCategory;
+
+                    // Update the last date category for the next iteration
+                    lastDateCategory = currentDateCategory;
+
                     return (
-                      <div
-                        key={msg.messageId}
-                        ref={(el) => {
-                          if (el) {
-                            if (!messageRefs.current) {
-                              messageRefs.current = {}; // Ensure it is initialized
-                            }
-                            messageRefs.current[msg.messageId] = el; // Assign the reference correctly
-                            if (isLastMessage) lastMessageRef.current = el; // Assign last message ref
-                          }
-                        }}
-                        className={`flex ${
-                          msg.senderId === currentUser?.uid
-                            ? "justify-end"
-                            : "justify-start"
-                        } my-3`}
-                      >
-                        {msg.senderId !== currentUser?.uid && (
-                          <div className="w-10 h-10 rounded-lg bg-gray-200 flex-shrink-0 mr-3">
-                            {/* User Avatar Placeholder */}
-                            <NameInitial id={msg?.senderId} />
+                      <>
+                        {showDateSeparator && (
+                          <div className="relative flex py-5 items-center w-full my-2">
+                            <div className="flex-grow border-t border-gray-300"></div>
+                            <span className="flex-shrink mx-4 text-gray-500 text-xs font-medium">
+                              {currentDateCategory}
+                            </span>
+                            <div className="flex-grow border-t border-gray-300"></div>
                           </div>
                         )}
-                        <div className={`flex items-start group ${ msg.senderId === currentUser?.uid && "justify-end"}`}>
-                          {/* reply icon  */}
-                          {msg.senderId === currentUser?.uid && (
-                            <div className="w-10 h-full flex items-center cursor-pointer text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <FaReply
-                                className="transform scale-x-[-1]"
-                                onClick={() => setPreviewMsg(msg)}
-                              />
+                        <div
+                          key={msg.messageId}
+                          ref={(el) => {
+                            if (el) {
+                              if (!messageRefs.current) {
+                                messageRefs.current = {}; // Ensure it is initialized
+                              }
+                              messageRefs.current[msg.messageId] = el; // Assign the reference correctly
+                              if (isLastMessage) lastMessageRef.current = el; // Assign last message ref
+                            }
+                          }}
+                          className={`flex ${
+                            msg.senderId === currentUser?.uid
+                              ? "justify-end"
+                              : "justify-start"
+                          } my-3`}
+                        >
+                          {msg.senderId !== currentUser?.uid && (
+                            <div className="w-10 h-10 rounded-lg bg-gray-200 flex-shrink-0 mr-3">
+                              {/* User Avatar Placeholder */}
+                              <NameInitial id={msg?.senderId} />
                             </div>
                           )}
-
-                          <div className="max-w-[80%]">
-                            {/* message reply  */}
-                            {msg?.replyTo && (
-                              <div
-                                onClick={() => scrollToMessage(msg?.replyTo)}
-                                className="bg-gray-300 rounded-t-lg px-2 flex items-center gap-x-2"
-                              >
-                                <FaReply className="text-xs text-gray-700" />
-                                <ReplyMsgContent
-                                  messageId={msg?.replyTo}
-                                  activeChat={activeChat}
-                                  symmetricDecyptedKey={symmetricDecyptedKey}
+                          <div
+                            className={`flex items-start group ${
+                              msg.senderId === currentUser?.uid && "justify-end"
+                            }`}
+                          >
+                            {/* reply icon  */}
+                            {msg.senderId === currentUser?.uid && (
+                              <div className="w-10 h-full flex items-center cursor-pointer text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <FaReply
+                                  className="transform scale-x-[-1]"
+                                  onClick={() => setPreviewMsg(msg)}
                                 />
                               </div>
                             )}
 
-                            {/* message  div*/}
-                            <div
-                              className={`px-3 py-2 ${msg?.replyTo ? "rounded-b-lg" : msg.senderId === currentUser?.uid ? "rounded-b-lg rounded-tl-lg" : "rounded-b-lg rounded-tr-lg" }  ${
-                                msg.senderId === currentUser?.uid
-                                  ? "bg-purple-500 text-white"
-                                  : "bg-gray-100 text-gray-800"
-                              }`}
-                            >
-                              {/* sender name if chat is group  */}
-                              {msg.senderId !== currentUser?.uid &&
-                                activeChatData.isGroup && (
-                                  <SenderName senderId={msg.senderId} />
-                                )}
-
-                              {/* message  */}
-                              {symmetricDecyptedKey && msg.text ? (
-                                <p>
-                                  {decryptMessage(
-                                    msg.text,
-                                    symmetricDecyptedKey
-                                  )}
-                                </p>
-                              ) : (
-                                // files
-                                <a href={msg?.file?.fileUrl} target="_blank">
-                                  {msg?.file.type?.startsWith("image") && (
-                                    <img
-                                      src={msg.file.fileUrl}
-                                      className="h-56 w-56"
-                                    />
-                                  )}
-                                  {msg?.file.type?.startsWith("video") && (
-                                    <video
-                                      src={msg.file.fileUrl}
-                                      autoPlay
-                                      className="h-56 w-56"
-                                    />
-                                  )}
-                                  {(msg?.file.type?.startsWith("application") ||
-                                    msg?.file.type?.startsWith("text") ||
-                                    msg?.file.type?.startsWith("audio")) && (
-                                    <span>{msg?.file?.name}</span>
-                                  )}
-                                </a>
+                            <div className="max-w-[80%]">
+                              {/* message reply  */}
+                              {msg?.replyTo && (
+                                <div
+                                  onClick={() => scrollToMessage(msg?.replyTo)}
+                                  className="bg-gray-300 rounded-t-lg px-2 text-sm p-2 flex items-center gap-x-2"
+                                >
+                                  <FaReply className="text-xs text-gray-700" />
+                                  <ReplyMsgContent
+                                    messageId={msg?.replyTo}
+                                    activeChat={activeChat}
+                                    symmetricDecyptedKey={symmetricDecyptedKey}
+                                  />
+                                </div>
                               )}
 
-                              <div className="text-xs flex justify-between mt-2">
-                                <span>{formattedTime(msg.timestamp)}</span>
+                              {/* message  div*/}
+                              <div
+                                className={`px-3 py-2 ${
+                                  msg?.replyTo
+                                    ? "rounded-b-lg"
+                                    : msg.senderId === currentUser?.uid
+                                    ? "rounded-b-lg rounded-tl-lg"
+                                    : "rounded-b-lg rounded-tr-lg"
+                                }  ${
+                                  msg.senderId === currentUser?.uid
+                                    ? "bg-purple-500 text-white"
+                                    : "bg-gray-100 text-gray-800"
+                                }`}
+                              >
+                                {/* sender name if chat is group  */}
+                                {msg.senderId !== currentUser?.uid &&
+                                  activeChatData.isGroup && (
+                                    <SenderName senderId={msg.senderId} />
+                                  )}
+
+                                {/* message  */}
+                                {symmetricDecyptedKey && msg.text ? (
+                                  <ExpandableMessage
+                                    messageText={decryptMessage(
+                                      msg.text,
+                                      symmetricDecyptedKey
+                                    )}
+                                   
+                                  />
+                                ) : (
+                                  // files
+                                  <a href={msg?.file?.fileUrl} target="_blank">
+                                    {msg?.file.type?.startsWith("image") && (
+                                      <img
+                                        src={msg.file.fileUrl}
+                                        className="h-56 w-56"
+                                      />
+                                    )}
+                                    {msg?.file.type?.startsWith("video") && (
+                                      <video
+                                        src={msg.file.fileUrl}
+                                        autoPlay
+                                        className="h-56 w-56"
+                                      />
+                                    )}
+                                    {(msg?.file.type?.startsWith(
+                                      "application"
+                                    ) ||
+                                      msg?.file.type?.startsWith("text") ||
+                                      msg?.file.type?.startsWith("audio")) && (
+                                      <span>{msg?.file?.name}</span>
+                                    )}
+                                  </a>
+                                )}
+
+                                <div className="flex justify-between mt-2">
+                                  <span className="text-xs">
+                                    {formattedTime(msg.timestamp)}
+                                  </span>
+                                </div>
                               </div>
                             </div>
+
+                            {msg.senderId !== currentUser?.uid && (
+                              <div className="w-10 h-full flex items-center ml-3 cursor-pointer text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <FaReply onClick={() => setPreviewMsg(msg)} />
+                              </div>
+                            )}
                           </div>
 
-                          {msg.senderId !== currentUser?.uid && (
-                            <div className="w-10 h-full flex items-center ml-3 cursor-pointer text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <FaReply onClick={() => setPreviewMsg(msg)} />
+                          {msg.senderId === currentUser?.uid && (
+                            <div className="w-10 h-10 rounded-lg bg-purple-200 flex-shrink-0 ml-3">
+                              {/* User Avatar Placeholder */}
+                              <NameInitial id={msg?.senderId} />
                             </div>
                           )}
                         </div>
-
-                        {msg.senderId === currentUser?.uid && (
-                          <div className="w-10 h-10 rounded-lg bg-purple-200 flex-shrink-0 ml-3">
-                            {/* User Avatar Placeholder */}
-                            <NameInitial id={msg?.senderId} />
-                          </div>
-                        )}
-                      </div>
+                      </>
                     );
                   });
                 })()
@@ -931,7 +967,7 @@ const ChatWindow = () => {
           <div className="p-2 px-4 mx-4 rounded-md bg-gray-200 flex justify-between">
             <div className="flex flex-col">
               {previewMsg?.text && (
-                <span className="text-ellipsis line-clamp-2">
+                <span className="text-ellipsis line-clamp-2 text-sm">
                   {" "}
                   {decryptMessage(previewMsg?.text, symmetricDecyptedKey)}
                 </span>

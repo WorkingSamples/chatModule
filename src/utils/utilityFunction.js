@@ -91,7 +91,7 @@ export const fetchSymmetricDecryptedKey = async (
   const chatDoc = await getDoc(chatRef);
 
   if (chatDoc.exists()) {
-    const encryptedKey = chatDoc.data().encryptedKeys[userId];
+    const encryptedKey = chatDoc?.data().encryptedKeys[userId];
     console.log("encrypted key:", encryptedKey, "of user:", userId);
 
     if (!encryptedKey) {
@@ -144,13 +144,29 @@ export const formattedTime = (timestamp) => {
     const diffInSecs = now.diff(messageTime, "seconds");
 
     if (diffInSecs < 120) {
-      return `${diffInSecs} seconds ago`;
+      return `${diffInSecs} secs. ago`;
     }
     if (diffInMinutes < 60) {
-      return `${diffInMinutes} minutes ago`;
+      return `${diffInMinutes} mins. ago`;
     }
   }
 
   // Otherwise, return standard time format
   return messageTime.format("h:mm A");
+};
+
+export const getDateCategory = (timestamp) => {
+  const messageDate = moment(timestamp);
+  const today = moment().startOf("day");
+  const yesterday = moment().subtract(1, "days").startOf("day");
+
+  // Compare dates (moment automatically handles the conversion to start of day for comparison)
+  if (messageDate.isSame(today, "day")) {
+    return "Today";
+  } else if (messageDate.isSame(yesterday, "day")) {
+    return "Yesterday";
+  } else {
+    // Format as: "February 23, 2025"
+    return messageDate.format("MMMM D, YYYY");
+  }
 };

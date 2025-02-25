@@ -20,6 +20,10 @@ const Login = ({
       return;
     }
 
+    if (name === "password" && value.includes(" ")) {
+      return;
+    }
+
     setFormState((prev) => ({ ...prev, [name]: value }));
     setErrors("");
   };

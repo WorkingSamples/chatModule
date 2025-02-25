@@ -112,7 +112,7 @@ const ChatList = () => {
         (participant) => participant !== currentUser?.uid
       )[0];
 
-      return <NameInitial id={userId} />;
+      return <NameInitial id={userId} key="name"/>;
     }
   };
 
@@ -138,43 +138,49 @@ const ChatList = () => {
         allChats.map((chat, index) => (
           <div
             key={index}
-            className={`p-4 border-b flex items-center cursor-pointer ${
-              chat.chatId === activeChat && "bg-gray-200"
-            }`}
+            className="p-4 border-b flex items-center justify-between cursor-pointer"
             onClick={() => handleChatClick(chat.user, chat)}
           >
-            <div className="w-12 h-12 rounded-lg relative bg-gray-300">
-              <ActivityStatus chat={chat} />
-              <InitialName chat={chat} />
-            </div>  
-            <div className="ml-4">
-              <div className="flex gap-x-2 items-center justify-between">
-                <DisplayNameComponent
-                  chatData={chat}
-                  currentUser={currentUser}
-                />
-                {chat?.isGroup && (
-                  <span className="bg-gray-400 mr-2 text-white shadow-md text-xs p-1 rounded-md">
-                    group
-                  </span>
-                )}
+            {/* Left section with avatar and chat info - wrapped in a flex container */}
+            <div className="flex items-center flex-grow">
+              <div className="w-12 h-12 rounded-lg relative bg-gray-300">
+                <ActivityStatus chat={chat} />
+                <InitialName chat={chat} />
               </div>
+              <div className="ml-4 overflow-hidden">
+                <div className="flex gap-x-2 items-center">
+                  <DisplayNameComponent
+                    chatData={chat}
+                    currentUser={currentUser}
+                  />
+                </div>
 
-              <p className="text-sm text-gray-600 truncate w-32">
-                {chat?.messages[chat?.messages?.length - 1]?.text
-                  ? decryptMessage(
-                      chat?.messages[chat?.messages?.length - 1]?.text,
-                      chat.decryptedKey
-                    )
-                  : chat?.messages[chat?.messages?.length - 1]?.file && "file"}
-              </p>
+                <p className="text-sm text-gray-600 truncate w-28 max-w-[200px]">
+                  {chat?.messages[chat?.messages?.length - 1]?.text
+                    ? decryptMessage(
+                        chat?.messages[chat?.messages?.length - 1]?.text,
+                        chat.decryptedKey
+                      )
+                    : chat?.messages[chat?.messages?.length - 1]?.file &&
+                      "file"}
+                </p>
+              </div>
             </div>
-            <span className="ml-auto text-xs">
-              {chat?.messages?.length !== 0 &&
-                formattedTime(
-                  chat?.messages[chat?.messages.length - 1]?.timestamp
-                )}
-            </span>
+
+            {/* Right section positioned at the end */}
+            <div className="flex flex-col items-end ml-2">
+              {chat?.isGroup && (
+                <span className="text-gray-700 underline text-xs p-1">
+                  group
+                </span>
+              )}
+              <div className="text-[10px] inline-block">
+                {chat?.messages?.length !== 0 &&
+                  formattedTime(
+                    chat?.messages[chat?.messages.length - 1]?.timestamp
+                  )}
+              </div>
+            </div>
           </div>
         ))
       ) : (

@@ -68,15 +68,16 @@ const GroupsList = () => {
     }
   }, [userPrivateKey, chats]);
 
+
   const handleGroupClick = async (group) => {
     const chatRoomId = group.chatId; // Unique chatroom ID based on user IDs
-    dispatch(setActiveChat(chatRoomId));
 
     // //get pvt key of current user to decrypt symmetric key of group
 
     //chatData to get encrypted pvt key of user
     const chatRef = doc(db, "chats", chatRoomId);
     const chatDoc = await getDoc(chatRef);
+    console.log(chatDoc,"chatdoccc")
 
     //fetch group key of particular user i.e encrypted user's key
     const decryptedKey = await fetchSymmetricDecryptedKey(
@@ -87,6 +88,8 @@ const GroupsList = () => {
 
     //setting group key for current active group chat to decrypt messages in chatwindow.jsx
     dispatch(setSymmetricDecryptedKey(decryptedKey));
+    dispatch(setActiveChat(chatRoomId));
+
 
     if (chatDoc.exists()) {
       dispatch(setMessages(chatDoc.data().messages || [])); // Load existing messages
@@ -128,9 +131,9 @@ const GroupsList = () => {
               <InitialName group={group} />
             </div>
             <div className="ml-4">
-              <p className="font-bold">{group.groupDetails?.groupName}</p>
+              <p className="font-bold text-sm">{group.groupDetails?.groupName}</p>
           
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600  truncate w-32">
                 {group?.messages[group?.messages?.length - 1]?.text
                   ? decryptMessage(
                       group?.messages[group?.messages?.length - 1]?.text,
@@ -140,7 +143,7 @@ const GroupsList = () => {
                     "file"}
               </p>
             </div>
-            <span className="ml-auto text-xs">
+            <span className="ml-auto text-[10px]">
               {group?.messages[group?.messages.length - 1]?.timestamp &&
                 moment(
                   group?.messages[group?.messages.length - 1]?.timestamp
