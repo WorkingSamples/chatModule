@@ -26,6 +26,7 @@ import {
   displayName,
   encryptSymmetricKey,
   fetchSymmetricDecryptedKey,
+  formatFileSize,
   formattedTime,
   generateSymmetricKey,
   getDateCategory,
@@ -461,7 +462,7 @@ const ChatWindow = () => {
           file: {
             name: file.name,
             type: file.type,
-            size: (file.size / 1024 / 1024).toFixed(2) + " MB",
+            size: formatFileSize(file.size),
             fileUrl,
           },
           timestamp: Date.now(),
@@ -547,7 +548,7 @@ const ChatWindow = () => {
         file,
         name: file.name,
         type: file.type,
-        size: (file.size / 1024 / 1024).toFixed(2) + " MB", // Convert size to MB
+        size: formatFileSize(file?.size), // Convert size to MB
         fileUrl: "", // Empty fileUrl as we're not uploading to Firebase Storage yet
       },
       preview: file.type.includes("image") ? URL.createObjectURL(file) : null, // Preview for images
@@ -851,7 +852,6 @@ const ChatWindow = () => {
                                       msg.text,
                                       symmetricDecyptedKey
                                     )}
-                                   
                                   />
                                 ) : (
                                   // files

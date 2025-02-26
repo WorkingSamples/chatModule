@@ -112,7 +112,7 @@ const ChatList = () => {
         (participant) => participant !== currentUser?.uid
       )[0];
 
-      return <NameInitial id={userId} key="name"/>;
+      return <NameInitial id={userId} key="name" />;
     }
   };
 
@@ -138,12 +138,13 @@ const ChatList = () => {
         allChats.map((chat, index) => (
           <div
             key={index}
-            className="p-4 border-b flex items-center justify-between cursor-pointer"
+            className={`p-4 border-b flex items-center justify-between cursor-pointer ${chat?.chatId === activeChat && "bg-gray-300"}`}
             onClick={() => handleChatClick(chat.user, chat)}
           >
+          
             {/* Left section with avatar and chat info - wrapped in a flex container */}
             <div className="flex items-center flex-grow">
-              <div className="w-12 h-12 rounded-lg relative bg-gray-300">
+              <div className="w-12 h-12 rounded-lg relative bg-gray-400">
                 <ActivityStatus chat={chat} />
                 <InitialName chat={chat} />
               </div>

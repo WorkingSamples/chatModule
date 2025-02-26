@@ -136,7 +136,13 @@ export default function GroupDialogBox({ isModalOpen, setIsModalOpen }) {
             <input
               type="text"
               value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
+              maxLength={20}
+              onChange={(e) => {
+                if (e.target.length < 25) {
+                  return;
+                }
+                setGroupName(e.target.value);
+              }}
               className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter group name"
             />
